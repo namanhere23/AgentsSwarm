@@ -2,6 +2,7 @@
 from crewai import Agent
 from backend.app.services.llm_adapter import LLMAdapter
 
+
 def create_orchestrator() -> Agent:
     return Agent(
         role="Orchestrator",

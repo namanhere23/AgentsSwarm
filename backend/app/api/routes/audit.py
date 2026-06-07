@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from backend.app.core.dependencies import get_current_user
-from backend.app.core.supabase_client import get_supabase_client
+from backend.app.core.dependencies import get_current_user, get_db_client
 from backend.app.services.approval_gate import approval_gate
 
 router = APIRouter(prefix="/audit", tags=["audit"])
@@ -12,10 +11,9 @@ async def get_audit_logs(
     limit: int = Query(20, ge=1, le=100),
     tool_name: str = None,
     user_id: str = Depends(get_current_user),
+    db=Depends(get_db_client),
 ):
     """Exposes paginated table views of executed mutations."""
-    db = get_supabase_client("auth")
-
     offset = (page - 1) * limit
     query = db.table("audit_log").select("*")
 
@@ -29,9 +27,12 @@ async def get_audit_logs(
 
 
 @router.post("/{id}/rollback", status_code=202)
-async def rollback_audit_action(id: str, user_id: str = Depends(get_current_user)):
+async def rollback_audit_action(
+    id: str,
+    user_id: str = Depends(get_current_user),
+    db=Depends(get_db_client),
+):
     """Submits compiled inverse action payloads to Approval Gates."""
-    db = get_supabase_client("auth")
 
     # 1. Fetch rollback action
     response = db.table("rollback_actions").select("*").eq("audit_log_id", id).execute()

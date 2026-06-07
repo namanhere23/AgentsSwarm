@@ -1,5 +1,5 @@
 // NEW — Implemented by: workstream/4c-approval-dashboard
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useApprovalStore, ApprovalRequest } from '../../stores/useApprovalStore';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -14,18 +14,18 @@ export const ApprovalCenter: React.FC = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const fetchApprovals = async () => {
+  const fetchApprovals = useCallback(async () => {
     try {
       const res = await api.get<ApprovalRequest[]>('/approvals?status=pending');
       setPendingApprovals(res.data);
     } catch (err) {
       console.error('Failed to load pending approvals from API', err);
     }
-  };
+  }, [setPendingApprovals]);
 
   useEffect(() => {
-    fetchApprovals();
-  }, []);
+    void fetchApprovals();
+  }, [fetchApprovals]);
 
   const handleApprove = async (id: string) => {
     setLoading(true);

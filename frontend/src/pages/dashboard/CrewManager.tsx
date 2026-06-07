@@ -19,14 +19,17 @@ export const CrewManager: React.FC = () => {
     }
 
     try {
-      const res = await api.post(`/crews/\${crewId.trim()}`, { yaml_content: yamlCode });
+      const res = await api.post(`/crews/${crewId.trim()}`, { yaml_content: yamlCode });
       if (res.data.status === 'saved') {
         setMessage('Crew saved and hot-reloaded successfully.');
       }
-    } catch (err: any) {
-      if (err.response?.status === 400 && err.response.data.detail) {
+    } catch (err: unknown) {
+      const response = typeof err === 'object' && err !== null && 'response' in err
+        ? (err as { response?: { status?: number; data?: { detail?: unknown } } }).response
+        : undefined;
+      if (response?.status === 400 && response.data?.detail) {
         // Handle validation errors list parsing
-        const details = err.response.data.detail;
+        const details = response.data.detail;
         if (typeof details === 'string' && details.includes('Validation failed:')) {
           // Extract errors string array
           try {
@@ -35,8 +38,10 @@ export const CrewManager: React.FC = () => {
           } catch {
             setErrors([{ field: 'schema', message: details }]);
           }
-        } else {
+        } else if (typeof details === 'string') {
           setErrors([{ field: 'api', message: details }]);
+        } else {
+          setErrors([{ field: 'api', message: 'The server rejected the crew definition.' }]);
         }
       } else {
         setErrors([{ field: 'server', message: 'Failed to write crew configuration template.' }]);

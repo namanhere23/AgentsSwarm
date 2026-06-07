@@ -2,6 +2,7 @@
 from crewai import Agent
 from backend.app.services.llm_adapter import LLMAdapter
 
+
 def create_retriever(tools: list) -> Agent:
     return Agent(
         role="Retriever",

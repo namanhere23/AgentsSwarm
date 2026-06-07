@@ -1,6 +1,6 @@
 # STUB-FILL — Implemented by: workstream/2c-crew-registry-ingestion
 import os
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from redis.asyncio import Redis
 from backend.app.models.swarm_models import (
@@ -30,6 +30,7 @@ async def get_redis():
 @router.post("", response_model=CreateSwarmResponse, status_code=202)
 async def create_swarm(
     request: CreateSwarmRequest,
+    req: Request,
     user_id: str = Depends(get_current_user),
     redis_client: Redis = Depends(get_redis),
 ):
@@ -48,12 +49,10 @@ async def create_swarm(
             headers={"Retry-After": "60"},
         )
 
-    # Mock Authorization token reference for Supabase RLS client
-    token = (
-        "mock_auth_token_for_rls"
-        if settings.ENVIRONMENT == "development"
-        else "real_token"
-    )
+    # Extract the real Bearer token from the request to pass to Supabase RLS
+    auth_header = req.headers.get("Authorization", "")
+    token = auth_header.removeprefix("Bearer ").strip() or "dev_token"
+
     db_client = get_supabase_client(token)
     repo = SupabaseRepository()
 

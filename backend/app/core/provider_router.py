@@ -12,17 +12,18 @@ routing to the cheapest provider sufficient for the task:
 
 # Agent-role → (preferred_provider, model) affinity table
 ROLE_AFFINITY: dict[str, tuple[str, str]] = {
-    "guardian":     ("gemini", "gemini-1.5-flash"),
-    "validator":    ("gemini", "gemini-1.5-flash"),
+    "guardian": ("gemini", "gemini-1.5-flash"),
+    "validator": ("gemini", "gemini-1.5-flash"),
     "orchestrator": ("gemini", "gemini-1.5-pro"),
-    "planner":      ("groq",   "llama-3.1-70b-versatile"),
-    "retriever":    ("groq",   "llama-3.1-70b-versatile"),
-    "executor":     ("groq",   "llama-3.1-70b-versatile"),
-    "replanner":    ("groq",   "llama-3.1-70b-versatile"),
-    "qa_verifier":  ("gemini", "gemini-1.5-flash"),
+    "planner": ("groq", "llama-3.1-70b-versatile"),
+    "retriever": ("groq", "llama-3.1-70b-versatile"),
+    "executor": ("groq", "llama-3.1-70b-versatile"),
+    "replanner": ("groq", "llama-3.1-70b-versatile"),
+    "qa_verifier": ("gemini", "gemini-1.5-flash"),
     # default for any unregistered role
-    "_default":     ("gemini", "gemini-1.5-flash"),
+    "_default": ("gemini", "gemini-1.5-flash"),
 }
+
 
 def get_preferred_provider(agent_role: str) -> tuple[str, str]:
     """Return (provider_name, model_name) for the given agent role."""

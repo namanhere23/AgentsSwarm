@@ -1,6 +1,7 @@
 import os
 import sys
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from fastapi import FastAPI
@@ -43,9 +44,17 @@ async def lifespan(app: FastAPI):
         },
     )
 
+    from backend.app.services.scheduler import SwarmScheduler
+
+    scheduler = SwarmScheduler()
+    scheduler.start()
+
     yield
     # Cleanup logic (if any) goes here
+    scheduler.shutdown()
 
+
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="Agent Swarms API",
@@ -62,6 +71,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount public directories
+app.mount("/cli", StaticFiles(directory="backend/public/cli"), name="cli")
 
 # Include API Routers (STUB references)
 from backend.app.api.routes import (  # noqa: E402

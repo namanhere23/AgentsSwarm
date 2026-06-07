@@ -1,13 +1,13 @@
 // NEW — Implemented by: workstream/4c-approval-dashboard
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import api from '../../services/api';
 
 interface AuditEntry {
   id: string;
   approval_request_id: string;
   tool_name: string;
-  input_payload: Record<string, any>;
-  output_payload: Record<string, any> | null;
+  input_payload: Record<string, unknown>;
+  output_payload: Record<string, unknown> | null;
   duration_ms: number | null;
   created_at: string;
 }
@@ -18,7 +18,7 @@ export const AuditLogView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<AuditEntry | null>(null);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<{ data: AuditEntry[] }>(`/audit/logs?page=${page}&limit=15`);
@@ -28,11 +28,11 @@ export const AuditLogView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
-    fetchLogs();
-  }, [page]);
+    void fetchLogs();
+  }, [fetchLogs]);
 
   return (
     <div className="max-w-6xl mx-auto py-8 font-sohne font-light tracking-tight text-text">
