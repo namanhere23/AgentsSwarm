@@ -2,8 +2,7 @@
 from fastapi import APIRouter, Depends, Query
 from sentence_transformers import SentenceTransformer
 from backend.app.models.memory_models import MemorySearchResponse, MemorySearchResult
-from backend.app.core.dependencies import get_current_user
-from backend.app.core.supabase_client import get_supabase_client
+from backend.app.core.dependencies import get_current_user, get_db_client
 from backend.app.memory.vector_store import VectorStore
 from backend.app.memory.repository import SupabaseRepository
 from backend.app.memory.ner_pipeline import extract_entities
@@ -16,12 +15,15 @@ vstore = VectorStore()
 
 
 @router.get("/search", response_model=MemorySearchResponse)
-async def search_memory(q: str = Query(...), user_id: str = Depends(get_current_user)):
+async def search_memory(
+    q: str = Query(...),
+    user_id: str = Depends(get_current_user),
+    db_client=Depends(get_db_client),
+):
     """
     Executes a hybrid RAG search matching vector query embeddings, SQL rank keywords,
     and spaCy entity tags overlaps. Normalizes results and returns the top 10 items.
     """
-    db_client = get_supabase_client("auth_token")
     repo = SupabaseRepository()
 
     # 1. Fetch top-50 results from ChromaDB cosine similarity search
@@ -163,8 +165,11 @@ async def search_memory(q: str = Query(...), user_id: str = Depends(get_current_
 
 
 @router.post("/events", response_model=str)
-async def create_memory_event(event: dict, user_id: str = Depends(get_current_user)):
-    db = get_supabase_client("auth")
+async def create_memory_event(
+    event: dict,
+    user_id: str = Depends(get_current_user),
+    db=Depends(get_db_client),
+):
     repo = SupabaseRepository()
     record = await repo.insert_memory_event(
         db,

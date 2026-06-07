@@ -17,6 +17,7 @@ from typing import Any, Callable, Optional
 logger = logging.getLogger("ResponseCache")
 CACHE_VERSION = "v1"
 
+
 class ResponseCache:
     def __init__(self, cache_dir: str = ".demo_cache", enabled: bool = True):
         self.cache_dir = Path(cache_dir)
@@ -29,7 +30,8 @@ class ResponseCache:
         return hashlib.md5(raw.encode()).hexdigest()
 
     def get(self, prompt: str, model: str = "") -> dict | None:
-        if not self.enabled: return None
+        if not self.enabled:
+            return None
         cache_file = self.cache_dir / f"{self._make_key(prompt, model)}.json"
         if cache_file.exists():
             try:
@@ -41,7 +43,8 @@ class ResponseCache:
         return None
 
     def put(self, prompt: str, response: dict, model: str = ""):
-        if not self.enabled: return
+        if not self.enabled:
+            return
         cache_file = self.cache_dir / f"{self._make_key(prompt, model)}.json"
         try:
             with open(cache_file, "w", encoding="utf-8") as f:
@@ -49,11 +52,15 @@ class ResponseCache:
         except OSError as e:
             logger.warning(f"Cache write failed: {e}")
 
-    async def get_or_call(self, prompt: str, func: Callable, *args, model: str = "", **kwargs) -> Any:
+    async def get_or_call(
+        self, prompt: str, func: Callable, *args, model: str = "", **kwargs
+    ) -> Any:
         cached = self.get(prompt, model)
         if cached is not None:
             return cached
         result = await func(*args, **kwargs)
         if isinstance(result, dict) or isinstance(result, str):
-            self.put(prompt, {"result": result} if isinstance(result, str) else result, model)
+            self.put(
+                prompt, {"result": result} if isinstance(result, str) else result, model
+            )
         return result

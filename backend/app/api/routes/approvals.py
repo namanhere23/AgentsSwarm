@@ -6,7 +6,7 @@ from backend.app.models.approval_models import (
     ApproveResponse,
     RejectResponse,
 )
-from backend.app.core.dependencies import get_current_user
+from backend.app.core.dependencies import get_current_user, get_db_client
 from backend.app.core.supabase_client import get_supabase_client
 from backend.app.core.event_bus import EventBus
 from backend.app.services.approval_gate import approval_gate
@@ -25,10 +25,10 @@ async def get_redis():
 
 @router.get("", response_model=list[ApprovalRequest])
 async def list_approvals(
-    status: str = "pending", user_id: str = Depends(get_current_user)
+    status: str = "pending",
+    user_id: str = Depends(get_current_user),
+    db=Depends(get_db_client),
 ):
-    db = get_supabase_client("auth")
-    # Fetch lists from database
     response = (
         db.table("approval_requests")
         .select("*")
@@ -43,9 +43,9 @@ async def list_approvals(
 async def approve_action(
     id: str,
     user_id: str = Depends(get_current_user),
+    db=Depends(get_db_client),
     redis_client: Redis = Depends(get_redis),
 ):
-    db = get_supabase_client("auth")
 
     # 1. Verify existence
     response = (
@@ -90,9 +90,9 @@ async def reject_action(
     id: str,
     reason: dict,
     user_id: str = Depends(get_current_user),
+    db=Depends(get_db_client),
     redis_client: Redis = Depends(get_redis),
 ):
-    db = get_supabase_client("auth")
 
     response = (
         db.table("approval_requests")

@@ -8,6 +8,7 @@ from backend.app.core.config import settings
 
 router = APIRouter(prefix="/workspace", tags=["briefings"])
 
+
 @router.get("/{filename}")
 async def get_workspace_file(filename: str, user_id: str = Depends(get_current_user)):
     """Serves compiled WAV, Markdown, or PDF assets from workspace sandboxes."""
@@ -16,7 +17,9 @@ async def get_workspace_file(filename: str, user_id: str = Depends(get_current_u
 
     # Path Traversal Check
     if not str(target_path).startswith(str(workspace_root)):
-        raise HTTPException(status_code=403, detail="Access denied: path traversal rejected.")
+        raise HTTPException(
+            status_code=403, detail="Access denied: path traversal rejected."
+        )
 
     if not target_path.exists():
         raise HTTPException(status_code=404, detail="Requested asset file not found.")
@@ -26,7 +29,7 @@ async def get_workspace_file(filename: str, user_id: str = Depends(get_current_u
     media_types = {
         ".wav": "audio/wav",
         ".md": "text/markdown",
-        ".pdf": "application/pdf"
+        ".pdf": "application/pdf",
     }
     media_type = media_types.get(ext, "application/octet-stream")
 

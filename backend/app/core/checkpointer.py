@@ -4,7 +4,6 @@ from psycopg.rows import dict_row
 from backend.app.core.config import settings
 
 
-
 class PostgresCheckpointer:
     def __init__(self):
         # Configure psycopg ConnectionPool with autocommit=True and dict_row row factory

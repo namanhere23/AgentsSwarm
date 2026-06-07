@@ -1,4 +1,4 @@
-﻿from crewai import Crew, Process, Task
+from crewai import Crew, Process, Task
 from backend.app.core.logging import get_logger
 from backend.app.core.supabase_client import get_supabase_client
 from backend.app.core.tool_registry import get_tool
@@ -55,16 +55,18 @@ async def execute_crew(
     )
 
     try:
-        # Resolve tools lists
-        planner_tools = [
-            get_tool(name) for name in crew_def.agents[1].tools if get_tool(name)
-        ]
-        retriever_tools = [
-            get_tool(name) for name in crew_def.agents[2].tools if get_tool(name)
-        ]
-        executor_tools = [
-            get_tool(name) for name in crew_def.agents[3].tools if get_tool(name)
-        ]
+        # Resolve tools lists safely mapping agents by their assumed roles
+        planner_tools = []
+        retriever_tools = []
+        executor_tools = []
+
+        for agent_def in crew_def.agents:
+            if "planner" in agent_def.role.lower() or agent_def.role == "planner":
+                planner_tools.extend([get_tool(name) for name in agent_def.tools if get_tool(name)])
+            elif "retriever" in agent_def.role.lower() or agent_def.role == "retriever":
+                retriever_tools.extend([get_tool(name) for name in agent_def.tools if get_tool(name)])
+            elif "executor" in agent_def.role.lower() or agent_def.role == "executor":
+                executor_tools.extend([get_tool(name) for name in agent_def.tools if get_tool(name)])
 
         # 3. Create agent structures
         orchestrator = create_orchestrator()

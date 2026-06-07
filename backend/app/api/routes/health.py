@@ -45,7 +45,7 @@ async def get_health(redis_client: Redis = Depends(get_redis)):
     try:
         async with httpx.AsyncClient() as client:
             res = await client.get(
-                f"http://{settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}/api/v1/heartbeat"
+                f"http://{settings.CHROMA_HOST}:{settings.CHROMA_PORT}/api/v1/heartbeat"
             )
             components["chromadb"] = "up" if res.status_code == 200 else "down"
     except Exception:
@@ -84,11 +84,21 @@ async def get_health(redis_client: Redis = Depends(get_redis)):
     elif components["redis"] == "down":
         status = "degraded"
 
-    # Dummy rate stats placeholder (will read actual Redis counters in next phases)
+    # Read real rate-limit counters from Redis
+    gemini_tokens = 0
+    groq_requests = 0
+    serper_searches = 0
+    try:
+        gemini_tokens = int(await redis_client.get("rate:gemini:tokens_today") or 0)
+        groq_requests = int(await redis_client.get("rate:groq:requests_today") or 0)
+        serper_searches = int(await redis_client.get("rate:serper:searches_month") or 0)
+    except Exception:
+        pass  # Redis counters not yet populated; return zeros
+
     rate_limits = RateLimitStatus(
-        gemini_tokens_used_today=0,
-        groq_requests_used_today=0,
-        serper_searches_used_month=0,
+        gemini_tokens_used_today=gemini_tokens,
+        groq_requests_used_today=groq_requests,
+        serper_searches_used_month=serper_searches,
     )
 
     return HealthResponse(status=status, components=components, rate_limits=rate_limits)

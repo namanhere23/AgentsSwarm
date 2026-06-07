@@ -1,0 +1,137 @@
+services:
+  # 1. API Server (FastAPI)
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 2
+    ports:
+      - "8000:8000"
+    volumes:
+      - workspace_data:/app/workspace
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      chromadb:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - swarm_network
+
+  # 2. Async CrewAI Workers
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python -m backend.workers.crew_consumer
+    volumes:
+      - workspace_data:/app/workspace
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - swarm_network
+
+  # Whisper Worker
+  whisper-worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python -m backend.workers.whisper_consumer
+    volumes:
+      - workspace_data:/app/workspace
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - swarm_network
+
+  # TTS Worker
+  tts-worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python -m backend.workers.tts_consumer
+    volumes:
+      - .:/app
+      - workspace_data:/app/workspace
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - swarm_network
+
+  # 3. Web Dashboard (React/Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - swarm_network
+
+  # 4. PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nexsus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-nexsus_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexsus"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - swarm_network
+
+  # 5. Redis (Event Bus & Rate Limiting)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - swarm_network
+
+  # 6. ChromaDB (Vector RAG Store)
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - swarm_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  chroma_data:
+  workspace_data:
+
+networks:
+  swarm_network:
+    driver: bridge

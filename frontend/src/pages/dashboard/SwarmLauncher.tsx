@@ -15,7 +15,10 @@ export const SwarmLauncher: React.FC = () => {
   const [objective, setObjective] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [recording, setRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const setActiveSwarm = useSwarmStore((state) => state.setActiveSwarm);
   const clearStore = useSwarmStore((state) => state.clearStore);
@@ -35,6 +38,66 @@ export const SwarmLauncher: React.FC = () => {
     };
     fetchCrews();
   }, []);
+
+  const startRecording = async () => {
+    setError(null);
+    setMessage(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        await uploadVoice(audioBlob);
+      };
+
+      setMediaRecorder(recorder);
+      recorder.start();
+      setRecording(true);
+    } catch (err) {
+      setError('Microphone Access Denied. Verify device permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && recording) {
+      mediaRecorder.stop();
+      setRecording(false);
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+    }
+  };
+
+  const uploadVoice = async (blob: Blob) => {
+    setLoading(true);
+    setUploadProgress(0);
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.webm');
+
+    try {
+      await api.post('/swarms/voice', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percent = progressEvent.total
+            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            : 50;
+          setUploadProgress(percent);
+        }
+      });
+      
+      setMessage('Audio uploaded successfully. Transcription queued. Once complete, you will see a new active swarm trace.');
+      setUploadProgress(null);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Voice upload failed.');
+      setUploadProgress(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +133,12 @@ export const SwarmLauncher: React.FC = () => {
             {error}
           </div>
         )}
+        
+        {message && (
+          <div className="mb-4 rounded-[8px] bg-primary-soft/20 border border-primary p-3 text-[15px] text-primary">
+            {message}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -101,7 +170,32 @@ export const SwarmLauncher: React.FC = () => {
             </div>
           </div>
 
-          {/* Extension point for Voice recording widget (Phase 6A) goes here */}
+          {/* Audio recording widgets */}
+          <div className="rounded-[8px] border border-hairline-input bg-canvas-soft p-[16px] flex items-center justify-between">
+            <div className="text-[14px] text-ink-mute font-light">
+              {recording ? 'Recording voice objective...' : 'Or use voice recognition triggers'}
+              {uploadProgress !== null && <div className="mt-1 font-normal text-primary">Uploading: {uploadProgress}%</div>}
+            </div>
+            
+            {recording ? (
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="h-10 w-10 bg-ruby rounded-full flex items-center justify-center text-on-primary animate-pulse shadow-md"
+              >
+                ■
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={loading}
+                className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-on-primary hover:bg-primary-press shadow-md disabled:opacity-50"
+              >
+                🎙
+              </button>
+            )}
+          </div>
 
           <button
             type="submit"

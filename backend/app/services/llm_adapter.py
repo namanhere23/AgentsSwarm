@@ -19,7 +19,12 @@ import logging
 from openai import AsyncOpenAI
 from backend.app.core.config import settings
 from backend.app.core.logging import get_logger
-from backend.app.core.circuit_breaker import check_breaker, record_failure, record_success, CircuitBreakerOpen
+from backend.app.core.circuit_breaker import (
+    check_breaker,
+    record_failure,
+    record_success,
+    CircuitBreakerOpen,
+)
 from backend.app.core.provider_router import get_preferred_provider
 from backend.app.memory.repository import SupabaseRepository
 
@@ -75,9 +80,13 @@ PROVIDER_POOLS = [
 
 
 class LLMAdapter:
-    def __init__(self, model: str = "gemini-1.5-flash",
-                 temperature: float = 0.0, max_tokens: int = 512,
-                 agent_role: str = "_default"):
+    def __init__(
+        self,
+        model: str = "gemini-1.5-flash",
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        agent_role: str = "_default",
+    ):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -112,7 +121,9 @@ class LLMAdapter:
 
         for provider_name, base_url, default_model, key_pool in ordered_pools:
             if not key_pool:
-                logger.warning(f"No API keys configured for provider '{provider_name}'. Skipping.")
+                logger.warning(
+                    f"No API keys configured for provider '{provider_name}'. Skipping."
+                )
                 continue
 
             # ━━ Level 1: Intra-provider key rotation ━━━━━━━━━━━━━━━━━━━━
@@ -149,19 +160,22 @@ class LLMAdapter:
                     # Audit log
                     usage = response.usage
                     if supabase_client and usage:
-                        await SupabaseRepository().insert_audit_log(supabase_client, {
-                            "tool_name": f"LLM_{provider_name}",
-                            "input_payload": {
-                                "model": default_model,
-                                "provider": provider_name,
-                                "key_index": key_index,
-                                "trace_id": trace_id,
+                        await SupabaseRepository().insert_audit_log(
+                            supabase_client,
+                            {
+                                "tool_name": f"LLM_{provider_name}",
+                                "input_payload": {
+                                    "model": default_model,
+                                    "provider": provider_name,
+                                    "key_index": key_index,
+                                    "trace_id": trace_id,
+                                },
+                                "output_payload": {
+                                    "prompt_tokens": usage.prompt_tokens,
+                                    "completion_tokens": usage.completion_tokens,
+                                },
                             },
-                            "output_payload": {
-                                "prompt_tokens": usage.prompt_tokens,
-                                "completion_tokens": usage.completion_tokens,
-                            },
-                        })
+                        )
 
                     logger.info(
                         f"LLM success: provider={provider_name} key_index={key_index} "
