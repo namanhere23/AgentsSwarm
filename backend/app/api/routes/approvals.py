@@ -46,7 +46,7 @@ async def approve_action(
     redis_client: Redis = Depends(get_redis),
 ):
     db = get_supabase_client("auth")
-    
+
     # 1. Verify existence
     response = (
         db.table("approval_requests")
