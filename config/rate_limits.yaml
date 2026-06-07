@@ -1,0 +1,20 @@
+# Rate Limiter Configuration
+providers:
+  gemini:
+    requests_per_day: 10000
+    tokens_per_day: 1000000
+  groq:
+    requests_per_day: 14400
+  openrouter:
+    requests_per_day: 5000
+
+tools:
+  WebSearchTool:
+    requests_per_hour: 50
+  HttpActionTool:
+    requests_per_hour: 100
+  CodeExecutionTool:
+    requests_per_hour: 200
+
+users:
+  max_concurrent_runs: 10
