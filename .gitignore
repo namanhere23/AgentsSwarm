@@ -102,3 +102,5 @@ Thumbs.db
 docs/
 Agent_Swarms_PRD.md
 PHASE_*.md
+
+./forward_docs

@@ -40,15 +40,16 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-dark-bg p-4">
-      <div className="w-full max-w-md rounded-2xl border border-dark-border bg-dark-card p-8 shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-canvas relative overflow-hidden">
+      <div className="absolute inset-0 gradient-mesh-backdrop z-0 pointer-events-none"></div>
+      <div className="w-full max-w-md card-feature-light z-10 relative">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Agent Swarms</h1>
-          <p className="mt-2 text-sm text-gray-400">Multi-Agent Operating System Coordinator</p>
+          <h1 className="display-md text-ink">Agent Swarms</h1>
+          <p className="mt-2 caption text-ink-mute">Multi-Agent Operating System Coordinator</p>
         </div>
         
         {error && (
-          <div className="mb-4 rounded-lg bg-red-950 border border-red-800 p-3 text-xs text-red-400">
+          <div className="mb-4 rounded-md bg-ruby/10 border border-ruby/20 p-3 text-xs text-ruby">
             {error}
           </div>
         )}
@@ -56,13 +57,13 @@ export const Login: React.FC = () => {
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+          className="button-primary-pill w-full mt-4 disabled:opacity-50"
         >
           {loading ? (
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-t-transparent border-white" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-t-transparent border-on-primary" />
           ) : (
             <>
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

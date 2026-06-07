@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = Field(..., env="GEMINI_API_KEY")
     GROQ_API_KEY: str = Field("", env="GROQ_API_KEY")
     OPENROUTER_API_KEY: str = Field("", env="OPENROUTER_API_KEY")
+    ELEVENLABS_API_KEY: str = Field("", env="ELEVENLABS_API_KEY")
 
     # Search
     SERPER_API_KEY: str = Field(..., env="SERPER_API_KEY")

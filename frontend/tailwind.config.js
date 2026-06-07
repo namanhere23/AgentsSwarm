@@ -7,15 +7,59 @@ export default {
   theme: {
     extend: {
       colors: {
-        dark: {
-          bg: "#0B0F19",
-          card: "#151D30",
-          border: "#1F2E4D"
-        },
         primary: {
-          glow: "#3B82F6",
-          accent: "#60A5FA"
-        }
+          DEFAULT: "var(--color-primary)",
+          deep: "var(--color-primary-deep)",
+          press: "var(--color-primary-press)",
+          soft: "var(--color-primary-soft)",
+          "bg-subdued-hover": "var(--color-primary-bg-subdued-hover)",
+        },
+        brand: {
+          dark: {
+            900: "var(--color-brand-dark-900)",
+          }
+        },
+        ink: {
+          DEFAULT: "var(--color-ink)",
+          secondary: "var(--color-ink-secondary)",
+          mute: "var(--color-ink-mute)",
+          mute2: "var(--color-ink-mute-2)",
+        },
+        "on-primary": "var(--color-on-primary)",
+        canvas: {
+          DEFAULT: "var(--color-canvas)",
+          soft: "var(--color-canvas-soft)",
+          cream: "var(--color-canvas-cream)",
+        },
+        hairline: {
+          DEFAULT: "var(--color-hairline)",
+          input: "var(--color-hairline-input)",
+        },
+        ruby: "var(--color-ruby)",
+        magenta: "var(--color-magenta)",
+        lemon: "var(--color-lemon)",
+        "shadow-blue": "var(--color-shadow-blue)"
+      },
+      spacing: {
+        xxs: "var(--spacing-xxs)",
+        xs: "var(--spacing-xs)",
+        sm: "var(--spacing-sm)",
+        md: "var(--spacing-md)",
+        lg: "var(--spacing-lg)",
+        xl: "var(--spacing-xl)",
+        xxl: "var(--spacing-xxl)",
+        huge: "var(--spacing-huge)",
+      },
+      borderRadius: {
+        xs: "var(--radius-xs)",
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
+        pill: "var(--radius-pill)",
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       }
     },
   },
