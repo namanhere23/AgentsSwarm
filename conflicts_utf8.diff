@@ -1,0 +1,1025 @@
+﻿diff --cc .gitignore
+index 8f7ee86,3a79963..0000000
+--- a/.gitignore
++++ b/.gitignore
+@@@ -102,5 -102,4 +102,9 @@@ Thumbs.d
+  docs/
+  Agent_Swarms_PRD.md
+  PHASE_*.md
+++<<<<<<< HEAD
+ +
+- ./forward_docs
+++./forward_docs
+++=======
++ DESIGN.md
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+diff --cc backend/app/agents/delegation_logger.py
+index 8f4d61a,083335d..0000000
+--- a/backend/app/agents/delegation_logger.py
++++ b/backend/app/agents/delegation_logger.py
+@@@ -1,22 -1,30 +1,52 @@@
+  # STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
+++<<<<<<< HEAD
+ +from datetime import datetime
+ +from backend.app.memory.repository import SupabaseRepository
+ +
+ +def delegation_callback(from_agent: str, to_agent: str, task_description: str, swarm_run_id: str, db_client) -> None:
+ +    """Callback triggered on inter-agent delegation. Writes log entry to Postgres."""
+ +    repo = SupabaseRepository()
+ +    
+ +    # Run in simple background executor or thread if blocker
+ +    import asyncio
+ +    try:
+ +        loop = asyncio.get_running_loop()
+ +        loop.create_task(repo.insert_memory_event(db_client, {
+ +            "swarm_run_id": swarm_run_id,
+ +            "agent_role": from_agent,
+ +            "task_description": f"Delegation to {to_agent}",
+ +            "content": task_description,
+ +            "priority_score": 0.5,
+ +            "effective_score": 0.5
+ +        }))
+++=======
++ from backend.app.memory.repository import SupabaseRepository
++ 
++ 
++ def delegation_callback(
++     from_agent: str, to_agent: str, task_description: str, swarm_run_id: str, db_client
++ ) -> None:
++     """Callback triggered on inter-agent delegation. Writes log entry to Postgres."""
++     repo = SupabaseRepository()
++ 
++     # Run in simple background executor or thread if blocker
++     import asyncio
++ 
++     try:
++         loop = asyncio.get_running_loop()
++         loop.create_task(
++             repo.insert_memory_event(
++                 db_client,
++                 {
++                     "swarm_run_id": swarm_run_id,
++                     "agent_role": from_agent,
++                     "task_description": f"Delegation to {to_agent}",
++                     "content": task_description,
++                     "priority_score": 0.5,
++                     "effective_score": 0.5,
++                 },
++             )
++         )
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      except RuntimeError:
+          pass
+diff --cc backend/app/agents/executor.py
+index 7d5ffe8,fdd07b5..0000000
+--- a/backend/app/agents/executor.py
++++ b/backend/app/agents/executor.py
+@@@ -1,14 -1,16 +1,32 @@@
+++<<<<<<< HEAD
+ +# STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
+ +from crewai import Agent
+ +from backend.app.services.llm_adapter import LLMAdapter
+ +
+ +def create_executor(tools: list) -> Agent:
+ +    return Agent(
+ +        role='Executor',
+ +        goal='Translate planned steps into concrete external actions, routing each through the Approval Gate before dispatch.',
+ +        backstory='You are a precise execution specialist. You construct exact API payloads and system commands. You never act without human approval on external mutations.',
+ +        allow_delegation=False,
+ +        tools=tools,
+ +        llm=LLMAdapter(model='groq/llama-3.1-70b-versatile', temperature=0.0, max_tokens=1024),
+ +        verbose=True
+++=======
++ from crewai import Agent
++ from backend.app.services.llm_adapter import LLMAdapter
++ 
++ 
++ def create_executor(tools: list) -> Agent:
++     return Agent(
++         role="Executor",
++         goal="Translate planned steps into concrete external actions, routing each through the Approval Gate before dispatch.",
++         backstory="You are a precise execution specialist. You construct exact API payloads and system commands. You never act without human approval on external mutations.",
++         allow_delegation=False,
++         tools=tools,
++         llm=LLMAdapter(
++             model="groq/llama-3.1-70b-versatile", temperature=0.0, max_tokens=1024
++         ),
++         verbose=True,
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      )
+diff --cc backend/app/agents/orchestrator.py
+index c4daea6,dabd91f..0000000
+--- a/backend/app/agents/orchestrator.py
++++ b/backend/app/agents/orchestrator.py
+@@@ -2,13 -2,14 +2,26 @@@
+  from crewai import Agent
+  from backend.app.services.llm_adapter import LLMAdapter
+  
+++<<<<<<< HEAD
+ +def create_orchestrator() -> Agent:
+ +    return Agent(
+ +        role='Orchestrator',
+ +        goal='Decompose the user\'s natural language objective into an ordered TaskPlan and delegate tasks to the appropriate specialist agents.',
+ +        backstory='You are a senior AI project manager. You never execute tasks yourself. Your only job is to understand the goal, break it down, and assign work to your team.',
+ +        allow_delegation=True,
+ +        tools=[],
+ +        llm=LLMAdapter(model='gemini-1.5-flash', temperature=0.1, max_tokens=1024),
+ +        verbose=True
+++=======
++ 
++ def create_orchestrator() -> Agent:
++     return Agent(
++         role="Orchestrator",
++         goal="Decompose the user's natural language objective into an ordered TaskPlan and delegate tasks to the appropriate specialist agents.",
++         backstory="You are a senior AI project manager. You never execute tasks yourself. Your only job is to understand the goal, break it down, and assign work to your team.",
++         allow_delegation=True,
++         tools=[],
++         llm=LLMAdapter(model="gemini-1.5-flash", temperature=0.1, max_tokens=1024),
++         verbose=True,
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      )
+diff --cc backend/app/agents/planner.py
+index 875a971,a26d6d1..0000000
+--- a/backend/app/agents/planner.py
++++ b/backend/app/agents/planner.py
+@@@ -2,13 -2,14 +2,26 @@@
+  from crewai import Agent
+  from backend.app.services.llm_adapter import LLMAdapter
+  
+++<<<<<<< HEAD
+ +def create_planner(tools: list) -> Agent:
+ +    return Agent(
+ +        role='Planner',
+ +        goal='Enrich the TaskPlan with retrieved long-term memory context, producing a concrete, step-by-step StepSequence.',
+ +        backstory='You are an expert research strategist. You combine retrieved knowledge with systematic thinking to produce detailed, actionable execution plans.',
+ +        allow_delegation=False,
+ +        tools=tools,
+ +        llm=LLMAdapter(model='gemini-1.5-flash', temperature=0.2, max_tokens=2048),
+ +        verbose=True
+++=======
++ 
++ def create_planner(tools: list) -> Agent:
++     return Agent(
++         role="Planner",
++         goal="Enrich the TaskPlan with retrieved long-term memory context, producing a concrete, step-by-step StepSequence.",
++         backstory="You are an expert research strategist. You combine retrieved knowledge with systematic thinking to produce detailed, actionable execution plans.",
++         allow_delegation=False,
++         tools=tools,
++         llm=LLMAdapter(model="gemini-1.5-flash", temperature=0.2, max_tokens=2048),
++         verbose=True,
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      )
+diff --cc backend/app/agents/retriever.py
+index 01501c6,ad3d2cc..0000000
+--- a/backend/app/agents/retriever.py
++++ b/backend/app/agents/retriever.py
+@@@ -2,13 -2,16 +2,28 @@@
+  from crewai import Agent
+  from backend.app.services.llm_adapter import LLMAdapter
+  
+++<<<<<<< HEAD
+ +def create_retriever(tools: list) -> Agent:
+ +    return Agent(
+ +        role='Retriever',
+ +        goal='Fetch the most relevant real-time and archival information to support the current task objective.',
+ +        backstory='You are a world-class research analyst with access to the web and a long-term knowledge base. You surface only the most relevant, accurate information.',
+ +        allow_delegation=False,
+ +        tools=tools,
+ +        llm=LLMAdapter(model='groq/llama-3.1-70b-versatile', temperature=0.0, max_tokens=1024),
+ +        verbose=True
+++=======
++ 
++ def create_retriever(tools: list) -> Agent:
++     return Agent(
++         role="Retriever",
++         goal="Fetch the most relevant real-time and archival information to support the current task objective.",
++         backstory="You are a world-class research analyst with access to the web and a long-term knowledge base. You surface only the most relevant, accurate information.",
++         allow_delegation=False,
++         tools=tools,
++         llm=LLMAdapter(
++             model="groq/llama-3.1-70b-versatile", temperature=0.0, max_tokens=1024
++         ),
++         verbose=True,
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      )
+diff --cc backend/app/agents/validator.py
+index 520648d,504b21d..0000000
+--- a/backend/app/agents/validator.py
++++ b/backend/app/agents/validator.py
+@@@ -2,13 -2,14 +2,26 @@@
+  from crewai import Agent
+  from backend.app.services.llm_adapter import LLMAdapter
+  
+++<<<<<<< HEAD
+ +def create_validator() -> Agent:
+ +    return Agent(
+ +        role='Validator',
+ +        goal='Critically evaluate all Executor outputs using a dual-threshold scoring system. Execute deterministic QA checks and a rigid LLM Critic review. Enforce a 3-attempt retry loop on failure.',
+ +        backstory='You are an expert quality assurance analyst. You use a strict scoring rubric (default 72/100 threshold). You reject anything below threshold and force the executor to retry up to 3 times.',
+ +        allow_delegation=True,
+ +        tools=[],
+ +        llm=LLMAdapter(model='gemini-1.5-flash', temperature=0.0, max_tokens=512),
+ +        verbose=True
+++=======
++ 
++ def create_validator() -> Agent:
++     return Agent(
++         role="Validator",
++         goal="Critically evaluate all Executor outputs for logical consistency, schema correctness, factual accuracy, and risk flags before the crew finalizes.",
++         backstory="You are an expert quality assurance analyst. Your role is to find flaws, inconsistencies, and risks in proposed outputs. You are skeptical by nature.",
++         allow_delegation=True,
++         tools=[],
++         llm=LLMAdapter(model="gemini-1.5-flash", temperature=0.0, max_tokens=512),
++         verbose=True,
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      )
+diff --cc backend/app/core/checkpointer.py
+index a436742,85f82ef..0000000
+--- a/backend/app/core/checkpointer.py
++++ b/backend/app/core/checkpointer.py
+@@@ -1,33 -1,31 +1,55 @@@
+  # STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
+++<<<<<<< HEAD
+ +import psycopg
+ +from psycopg_pool import ConnectionPool
+ +from psycopg.rows import dict_row
+ +from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
+ +from backend.app.core.config import settings
+ +
+++=======
++ from psycopg_pool import ConnectionPool
++ from psycopg.rows import dict_row
++ from backend.app.core.config import settings
++ 
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  class PostgresCheckpointer:
+      def __init__(self):
+          # Configure psycopg ConnectionPool with autocommit=True and dict_row row factory
+          self.pool = ConnectionPool(
+              conninfo=settings.SUPABASE_URL,
+              open=True,
+++<<<<<<< HEAD
+ +            kwargs={
+ +                "autocommit": True,
+ +                "row_factory": dict_row
+ +            }
+++=======
++             kwargs={"autocommit": True, "row_factory": dict_row},
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          )
+  
+      def setup(self):
+          """Creates checkpoints table on startup."""
+          with self.pool.connection() as conn:
+++<<<<<<< HEAD
+ +            conn.execute("""
+++=======
++             conn.execute(
++                 """
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+                  CREATE TABLE IF NOT EXISTS checkpoints (
+                      id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+                      thread_id VARCHAR NOT NULL,
+                      checkpoint_data BYTEA NOT NULL,
+                      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                  );
+++<<<<<<< HEAD
+ +            """)
+++=======
++             """
++             )
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  
+      def get_saver(self):
+          # Wraps database pool as custom checkpoint saver class for CrewAI structures
+diff --cc backend/app/services/crew_executor.py
+index fe58fee,cf5ee28..0000000
+--- a/backend/app/services/crew_executor.py
++++ b/backend/app/services/crew_executor.py
+@@@ -1,4 -1,3 +1,7 @@@
+++<<<<<<< HEAD
+ +# STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
+++=======
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  from crewai import Crew, Process, Task
+  from backend.app.core.logging import get_logger
+  from backend.app.core.supabase_client import get_supabase_client
+@@@ -6,7 -5,6 +9,10 @@@ from backend.app.core.tool_registry imp
+  from backend.app.core.checkpointer import PostgresCheckpointer
+  from backend.app.core.event_bus import EventBus
+  from backend.app.memory.repository import SupabaseRepository
+++<<<<<<< HEAD
+ +from backend.app.services.llm_adapter import LLMAdapter
+++=======
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  from backend.app.services.report_generator import generate_report
+  from backend.app.services.briefing_service import BriefingService
+  from backend.app.agents.orchestrator import create_orchestrator
+@@@ -21,84 -19,122 +27,195 @@@ from backend.app.core.config import set
+  logger = get_logger("crew_executor")
+  
+  # Initialize checkpointer pool
+++<<<<<<< HEAD
+ +checkpointer = PostgresCheckpointer()
+ +checkpointer.setup()
+ +
+ +async def execute_crew(swarm_run_id: str, crew_def, objective: str, user_id: str, token: str) -> None:
+ +    """Instantiates the Crew topology and executes kickoff within the psycopg Saver thread context."""
+ +    db_client = get_supabase_client(token)
+ +    repo = SupabaseRepository()
+ +    
+ +    # 1. Update status
+ +    await repo.update_swarm_run_status(db_client, swarm_run_id, "running")
+ +    
+ +    # 2. Emit WS start event
+ +    redis_client = Redis.from_url(settings.REDIS_URL)
+ +    event_bus = EventBus(redis_client)
+ +    await event_bus.publish("ws_events", {
+ +        "type": "SWARM_STARTED",
+ +        "swarm_run_id": swarm_run_id,
+ +        "data": {"timestamp": "now"}
+ +    })
+ +    
+ +    try:
+ +        # Resolve tools lists
+ +        planner_tools = [get_tool(name) for name in crew_def.agents[1].tools if get_tool(name)]
+ +        retriever_tools = [get_tool(name) for name in crew_def.agents[2].tools if get_tool(name)]
+ +        executor_tools = [get_tool(name) for name in crew_def.agents[3].tools if get_tool(name)]
+ +        
+++=======
++ _checkpointer = None
++ 
++ 
++ def get_checkpointer():
++     global _checkpointer
++     if _checkpointer is None:
++         _checkpointer = PostgresCheckpointer()
++         # In testing mode with MOCK_TOOLS, don't attempt real DB connection
++         if not settings.MOCK_TOOLS:
++             _checkpointer.setup()
++     return _checkpointer
++ 
++ 
++ async def execute_crew(
++     swarm_run_id: str, crew_def, objective: str, user_id: str, token: str
++ ) -> None:
++     """Instantiates the Crew topology and executes kickoff within the psycopg Saver thread context."""
++     db_client = get_supabase_client(token)
++     repo = SupabaseRepository()
++ 
++     # 1. Update status
++     await repo.update_swarm_run_status(db_client, swarm_run_id, "running")
++ 
++     # 2. Emit WS start event
++     redis_client = Redis.from_url(settings.REDIS_URL)
++     event_bus = EventBus(redis_client)
++     await event_bus.publish(
++         "ws_events",
++         {
++             "type": "SWARM_STARTED",
++             "swarm_run_id": swarm_run_id,
++             "data": {"timestamp": "now"},
++         },
++     )
++ 
++     try:
++         # Resolve tools lists
++         planner_tools = [
++             get_tool(name) for name in crew_def.agents[1].tools if get_tool(name)
++         ]
++         retriever_tools = [
++             get_tool(name) for name in crew_def.agents[2].tools if get_tool(name)
++         ]
++         executor_tools = [
++             get_tool(name) for name in crew_def.agents[3].tools if get_tool(name)
++         ]
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          # 3. Create agent structures
+          orchestrator = create_orchestrator()
+          planner = create_planner(planner_tools)
+          retriever = create_retriever(retriever_tools)
+          executor = create_executor(executor_tools)
+          validator = create_validator()
+++<<<<<<< HEAD
+ +        
+ +        # Map delegation logger callbacks
+ +        def custom_delegation_callback(from_agent, to_agent, desc):
+ +            delegation_callback(from_agent, to_agent, desc, swarm_run_id, db_client)
+ +            
+ +        # Register on crew definition agents
+ +        # 4. Construct Crew
+ +        task1 = Task(description=f"Decompose the objective: {objective}", expected_output="Task plan layout", agent=orchestrator)
+ +        task2 = Task(description="Enrich task plan with memory contexts", expected_output="Action step sequence", agent=planner)
+ +        task3 = Task(description="Execute action operations", expected_output="API execution output", agent=executor)
+ +        
+++=======
++ 
++         # Map delegation logger callbacks
++         def custom_delegation_callback(from_agent, to_agent, desc):
++             delegation_callback(from_agent, to_agent, desc, swarm_run_id, db_client)
++ 
++         # Register on crew definition agents
++         # 4. Construct Crew
++         task1 = Task(
++             description=f"Decompose the objective: {objective}",
++             expected_output="Task plan layout",
++             agent=orchestrator,
++         )
++         task2 = Task(
++             description="Enrich task plan with memory contexts",
++             expected_output="Action step sequence",
++             agent=planner,
++         )
++         task3 = Task(
++             description="Execute action operations",
++             expected_output="API execution output",
++             agent=executor,
++         )
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          crew = Crew(
+              agents=[orchestrator, planner, retriever, executor, validator],
+              tasks=[task1, task2, task3],
+              process=Process.hierarchical,
+              manager_agent=orchestrator,
+++<<<<<<< HEAD
+ +            verbose=True
+ +        )
+ +        
+ +        # 5. Kickoff
+ +        result = crew.kickoff()
+ +        
+ +        # 6. Success - Save reports
+ +        output_text = str(result)
+ +        await repo.update_swarm_run_status(db_client, swarm_run_id, "completed", output_summary=output_text)
+ +        
+ +        # Write Markdown Report file
+ +        generate_report(swarm_run_id, result)
+ +        
+++=======
++             verbose=True,
++         )
++ 
++         # 5. Kickoff
++         result = crew.kickoff()
++ 
++         # 6. Success - Save reports
++         output_text = str(result)
++         await repo.update_swarm_run_status(
++             db_client, swarm_run_id, "completed", output_summary=output_text
++         )
++ 
++         # Write Markdown Report file
++         generate_report(swarm_run_id, result)
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          # Trigger Briefing enqueuing if high priority score
+          run_record = await repo.get_swarm_run(db_client, swarm_run_id)
+          p_score = run_record.get("priority_score", 0.0) if run_record else 0.0
+          if p_score >= 0.80:
+              briefing = BriefingService()
+              briefing.enqueue_briefing(swarm_run_id, output_text)
+++<<<<<<< HEAD
+ +            
+ +        await event_bus.publish("ws_events", {
+ +            "type": "SWARM_COMPLETED",
+ +            "swarm_run_id": swarm_run_id,
+ +            "data": {"output": output_text}
+ +        })
+ +        
+ +    except Exception as e:
+ +        logger.error(f"Crew kickoff failed: {str(e)}")
+ +        await repo.update_swarm_run_status(db_client, swarm_run_id, "failed")
+ +        
+++=======
++ 
++         await event_bus.publish(
++             "ws_events",
++             {
++                 "type": "SWARM_COMPLETED",
++                 "swarm_run_id": swarm_run_id,
++                 "data": {"output": output_text},
++             },
++         )
++ 
++     except Exception as e:
++         logger.error(f"Crew kickoff failed: {str(e)}")
++         await repo.update_swarm_run_status(db_client, swarm_run_id, "failed")
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      finally:
+          # Decrement concurrency run counter
+          concurrent_key = f"concurrent_runs:{user_id}"
+diff --cc backend/app/services/parallel_executor.py
+index 956f03d,d612d19..0000000
+--- a/backend/app/services/parallel_executor.py
++++ b/backend/app/services/parallel_executor.py
+@@@ -2,6 -2,7 +2,10 @@@
+  import asyncio
+  from backend.app.core.config import settings
+  
+++<<<<<<< HEAD
+++=======
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  class ParallelExecutor:
+      def __init__(self):
+          self.max_workers = int(settings.MAX_PARALLEL_TASKS)
+@@@ -9,7 -10,6 +13,10 @@@
+      async def execute_tasks(self, tasks: list) -> list:
+          """Determines DAG execution orders. Runs tasks concurrently using bounded gathers."""
+          # Simple task queue batch parser
+++<<<<<<< HEAD
+ +        results = []
+++=======
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          semaphore = asyncio.Semaphore(self.max_workers)
+  
+          async def run_with_semaphore(task):
+diff --cc backend/requirements.txt
+index ce75b76,5942585..0000000
+--- a/backend/requirements.txt
++++ b/backend/requirements.txt
+@@@ -20,8 -18,8 +20,13 @@@ python-dotenv==1.0.
+  pyyaml==6.0.1
+  apscheduler==3.10.4
+  croniter==2.0.5
+++<<<<<<< HEAD
+ +groq>=0.5.0
+ +elevenlabs>=1.0.0
+++=======
++ # openai-whisper==20231117
++ # TTS==0.22.0
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  pytest==8.2.0
+  pytest-asyncio==0.23.6
+  pytest-cov==5.0.0
+diff --cc backend/tests/unit/test_m3_crew_executor.py
+index 00108d6,7b5bf85..0000000
+--- a/backend/tests/unit/test_m3_crew_executor.py
++++ b/backend/tests/unit/test_m3_crew_executor.py
+@@@ -2,25 -2,40 +2,64 @@@ import pytes
+  from unittest.mock import AsyncMock, patch, MagicMock
+  from backend.app.services.crew_executor import execute_crew
+  
+++<<<<<<< HEAD
+++=======
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+  @pytest.mark.asyncio
+  async def test_crew_executor_sets_failed_on_kickoff_exception():
+      mock_crew = MagicMock()
+      mock_crew.kickoff.side_effect = Exception("API connection timeout")
+++<<<<<<< HEAD
+ +    
+ +    # Mock routing setup dependencies
+ +    with patch("backend.app.services.crew_executor.get_supabase_client") as mock_db, \
+ +         patch("backend.app.services.crew_executor.SupabaseRepository") as mock_repo_class, \
+ +         patch("backend.app.services.crew_executor.Crew", return_value=mock_crew):
+ +         
+ +         mock_repo = mock_repo_class.return_value
+ +         mock_repo.update_swarm_run_status = AsyncMock()
+ +         
+ +         # Mock crew details
+ +         crew_def = MagicMock()
+ +         crew_def.agents = [MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+ +         
+ +         # Run execution trigger
+ +         await execute_crew("run_id_0000", crew_def, "Research AI trends", "user_id_1111", "token_2222")
+ +         
+ +         # Confirm state changed to failed
+ +         mock_repo.update_swarm_run_status.assert_any_call(mock_db.return_value, "run_id_0000", "failed")
+++=======
++ 
++     # Mock routing setup dependencies
++     with patch(
++         "backend.app.services.crew_executor.get_supabase_client"
++     ) as mock_db, patch(
++         "backend.app.services.crew_executor.SupabaseRepository"
++     ) as mock_repo_class, patch(
++         "backend.app.services.crew_executor.Crew", return_value=mock_crew
++     ):
++ 
++         mock_repo = mock_repo_class.return_value
++         mock_repo.update_swarm_run_status = AsyncMock()
++ 
++         # Mock crew details
++         crew_def = MagicMock()
++         crew_def.agents = [
++             MagicMock(),
++             MagicMock(),
++             MagicMock(),
++             MagicMock(),
++             MagicMock(),
++         ]
++ 
++         # Run execution trigger
++         await execute_crew(
++             "run_id_0000", crew_def, "Research AI trends", "user_id_1111", "token_2222"
++         )
++ 
++         # Confirm state changed to failed
++         mock_repo.update_swarm_run_status.assert_any_call(
++             mock_db.return_value, "run_id_0000", "failed"
++         )
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+diff --cc backend/workers/crew_consumer.py
+index 20cd822,87f1d8d..0000000
+--- a/backend/workers/crew_consumer.py
++++ b/backend/workers/crew_consumer.py
+@@@ -11,19 -11,22 +11,37 @@@ from backend.app.core.logging import ge
+  
+  logger = get_logger("crew_worker")
+  
+++<<<<<<< HEAD
+ +async def main():
+ +    logger.info("Initializing Crew Execution worker...")
+ +    load_crews() # Start watchdog watcher
+ +    
+ +    redis_client = Redis.from_url(settings.REDIS_URL)
+ +    event_bus = EventBus(redis_client)
+ +    
+ +    async for message in event_bus.consume("swarm_queue", "crew_worker_group", "worker_node_1"):
+++=======
++ 
++ async def main():
++     logger.info("Initializing Crew Execution worker...")
++     load_crews()  # Start watchdog watcher
++ 
++     redis_client = Redis.from_url(settings.REDIS_URL)
++     event_bus = EventBus(redis_client)
++ 
++     async for message in event_bus.consume(
++         "swarm_queue", "crew_worker_group", "worker_node_1"
++     ):
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          logger.info(f"Received swarm execution task message: {message}")
+          swarm_run_id = message.get("swarm_run_id")
+          user_id = message.get("user_id")
+          token = message.get("token")
+++<<<<<<< HEAD
+ +        
+++=======
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          # Load details
+          db = get_supabase_client(token)
+          repo = SupabaseRepository()
+@@@ -31,12 -34,12 +49,20 @@@
+          if not run:
+              logger.error(f"Swarm run {swarm_run_id} details not found.")
+              continue
+++<<<<<<< HEAD
+ +            
+++=======
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          crew_def = get_crew(run["crew_id"])
+          if not crew_def:
+              logger.error(f"Crew definition {run['crew_id']} not registered.")
+              continue
+++<<<<<<< HEAD
+ +            
+++=======
++ 
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+          # Execute run in async task context
+          try:
+              await execute_crew(swarm_run_id, crew_def, run["objective"], user_id, token)
+@@@ -47,5 -50,6 +73,10 @@@
+          except Exception as e:
+              logger.error(f"Error handling task execution: {str(e)}")
+  
+++<<<<<<< HEAD
+ +if __name__ == '__main__':
+++=======
++ 
++ if __name__ == "__main__":
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+      asyncio.run(main())
+diff --cc frontend/src/index.css
+index 84004c8,302c9cc..0000000
+--- a/frontend/src/index.css
++++ b/frontend/src/index.css
+@@@ -4,189 -2,28 +4,215 @@@
+  @tailwind components;
+  @tailwind utilities;
+  
+++<<<<<<< HEAD
+ +@layer base {
+ +  :root {
+ +    /* Colors */
+ +    --color-primary: #533afd;
+ +    --color-primary-deep: #4434d4;
+ +    --color-primary-press: #2e2b8c;
+ +    --color-primary-soft: #665efd;
+ +    --color-primary-bg-subdued-hover: #b9b9f9;
+ +    --color-brand-dark-900: #1c1e54;
+ +    --color-ink: #0d253d;
+ +    --color-ink-secondary: #273951;
+ +    --color-ink-mute: #64748d;
+ +    --color-ink-mute-2: #61718a;
+ +    --color-on-primary: #ffffff;
+ +    --color-canvas: #ffffff;
+ +    --color-canvas-soft: #f6f9fc;
+ +    --color-canvas-cream: #f5e9d4;
+ +    --color-hairline: #e3e8ee;
+ +    --color-hairline-input: #a8c3de;
+ +    --color-ruby: #ea2261;
+ +    --color-magenta: #f96bee;
+ +    --color-lemon: #9b6829;
+ +    --color-shadow-blue: #003770;
+ +
+ +    /* Spacing */
+ +    --spacing-xxs: 2px;
+ +    --spacing-xs: 4px;
+ +    --spacing-sm: 8px;
+ +    --spacing-md: 12px;
+ +    --spacing-lg: 16px;
+ +    --spacing-xl: 24px;
+ +    --spacing-xxl: 32px;
+ +    --spacing-huge: 64px;
+ +
+ +    /* Border Radius */
+ +    --radius-xs: 4px;
+ +    --radius-sm: 6px;
+ +    --radius-md: 8px;
+ +    --radius-lg: 12px;
+ +    --radius-xl: 16px;
+ +    --radius-pill: 9999px;
+ +  }
+ +
+ +  body {
+ +    background-color: var(--color-canvas);
+ +    color: var(--color-ink);
+ +    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+ +    font-feature-settings: "ss01";
+ +    margin: 0;
+ +    -webkit-font-smoothing: antialiased;
+ +    -moz-osx-font-smoothing: grayscale;
+ +  }
+ +}
+ +
+ +@layer components {
+ +  /* Buttons */
+ +  .button-primary-pill {
+ +    @apply bg-primary text-on-primary rounded-pill flex items-center justify-center transition-colors duration-200 cursor-pointer;
+ +    padding: var(--spacing-sm) var(--spacing-lg);
+ +    font-family: 'Inter', system-ui, sans-serif;
+ +    font-size: 16px;
+ +    font-weight: 400;
+ +    line-height: 1.0;
+ +  }
+ +  .button-primary-pill:hover, .button-primary-pill:active {
+ +    @apply bg-primary-press;
+ +  }
+ +
+ +  .button-secondary {
+ +    @apply bg-canvas text-primary border border-primary rounded-pill flex items-center justify-center transition-colors duration-200 cursor-pointer;
+ +    padding: var(--spacing-sm) var(--spacing-lg);
+ +    font-family: 'Inter', system-ui, sans-serif;
+ +    font-size: 16px;
+ +    font-weight: 400;
+ +    line-height: 1.0;
+ +  }
+ +
+ +  .button-on-dark {
+ +    @apply bg-brand-dark-900 text-on-primary rounded-pill flex items-center justify-center transition-colors duration-200 cursor-pointer;
+ +    padding: var(--spacing-sm) var(--spacing-lg);
+ +    font-family: 'Inter', system-ui, sans-serif;
+ +    font-size: 16px;
+ +    font-weight: 400;
+ +    line-height: 1.0;
+ +  }
+ +
+ +  /* Inputs */
+ +  .text-input {
+ +    @apply bg-canvas text-ink border border-hairline-input rounded-sm outline-none transition-colors duration-200;
+ +    padding: var(--spacing-sm) var(--spacing-md);
+ +    font-family: 'Inter', system-ui, sans-serif;
+ +    font-size: 15px;
+ +    font-weight: 300;
+ +    line-height: 1.4;
+ +  }
+ +  .text-input:focus {
+ +    @apply border-primary;
+ +  }
+ +
+ +  /* Cards */
+ +  .card-feature-light {
+ +    @apply bg-canvas border border-hairline rounded-lg;
+ +    padding: var(--spacing-xxl);
+ +  }
+ +
+ +  .card-pricing {
+ +    @apply bg-canvas border border-hairline rounded-lg;
+ +    padding: var(--spacing-xxl);
+ +  }
+ +
+ +  .card-pricing-featured {
+ +    @apply bg-brand-dark-900 text-on-primary rounded-lg;
+ +    padding: var(--spacing-xxl);
+ +  }
+ +  
+ +  .card-dashboard-mockup {
+ +    @apply bg-canvas rounded-lg;
+ +    padding: var(--spacing-xl);
+ +    box-shadow: rgba(0, 55, 112, 0.08) 0 8px 24px, rgba(0, 55, 112, 0.04) 0 2px 6px;
+ +  }
+ +
+ +  .card-cream-band {
+ +    @apply bg-canvas-cream text-ink rounded-lg;
+ +    padding: var(--spacing-xxl);
+ +  }
+ +
+ +  /* Gradients */
+ +  .gradient-mesh-backdrop {
+ +    background: radial-gradient(circle at 10% 20%, var(--color-canvas-cream) 0%, transparent 25%),
+ +                radial-gradient(circle at 30% 30%, var(--color-lemon) 0%, transparent 30%),
+ +                radial-gradient(circle at 60% 40%, var(--color-primary-soft) 0%, transparent 40%),
+ +                radial-gradient(circle at 80% 20%, var(--color-primary) 0%, transparent 35%),
+ +                radial-gradient(circle at 50% 10%, var(--color-magenta) 0%, transparent 45%),
+ +                radial-gradient(circle at 90% 50%, var(--color-ruby) 0%, transparent 30%);
+ +    background-color: var(--color-canvas-cream);
+ +    filter: blur(60px);
+ +    opacity: 0.8;
+ +  }
+ +}
+ +
+ +@layer utilities {
+ +  .tnum {
+ +    font-feature-settings: "tnum", "ss01";
+ +  }
+ +  
+ +  /* Typography Utilities */
+ +  .display-xxl {
+ +    font-size: 56px; font-weight: 300; line-height: 1.03; letter-spacing: -1.4px;
+ +  }
+ +  .display-xl {
+ +    font-size: 48px; font-weight: 300; line-height: 1.15; letter-spacing: -0.96px;
+ +  }
+ +  .display-lg {
+ +    font-size: 32px; font-weight: 300; line-height: 1.1; letter-spacing: -0.64px;
+ +  }
+ +  .display-md {
+ +    font-size: 26px; font-weight: 300; line-height: 1.12; letter-spacing: -0.26px;
+ +  }
+ +  .heading-lg {
+ +    font-size: 22px; font-weight: 300; line-height: 1.1; letter-spacing: -0.22px;
+ +  }
+ +  .heading-md {
+ +    font-size: 20px; font-weight: 300; line-height: 1.4; letter-spacing: -0.2px;
+ +  }
+ +  .heading-sm {
+ +    font-size: 18px; font-weight: 300; line-height: 1.4; letter-spacing: 0px;
+ +  }
+ +  .body-lg {
+ +    font-size: 16px; font-weight: 300; line-height: 1.4; letter-spacing: 0px;
+ +  }
+ +  .body-md {
+ +    font-size: 15px; font-weight: 300; line-height: 1.4; letter-spacing: 0px;
+ +  }
+ +  .body-tabular {
+ +    font-size: 14px; font-weight: 300; line-height: 1.4; letter-spacing: -0.42px; font-feature-settings: "tnum", "ss01";
+ +  }
+ +  .caption {
+ +    font-size: 13px; font-weight: 400; line-height: 1.4; letter-spacing: -0.39px; font-feature-settings: "tnum", "ss01";
+ +  }
+ +  .micro {
+ +    font-size: 11px; font-weight: 300; line-height: 1.4; letter-spacing: 0px;
+ +  }
+ +  .micro-cap {
+ +    font-size: 10px; font-weight: 400; line-height: 1.15; letter-spacing: 0.1px; text-transform: uppercase;
+++=======
++ body {
++   margin: 0;
++   background-color: theme('colors.dark.bg'); /* Default dashboard shell bg */
++   color: theme('colors.canvas.DEFAULT');
++   font-family: theme('fontFamily.sans');
++   font-feature-settings: "ss01";
++   -webkit-font-smoothing: antialiased;
++ }
++ 
++ @layer utilities {
++   .tabular-nums-money {
++     font-feature-settings: "tnum", "ss01";
++     letter-spacing: -0.42px;
++   }
++   
++   .display-text-hero {
++     letter-spacing: -1.4px;
++     font-weight: 300;
++   }
++   
++   .display-text-md {
++     letter-spacing: -0.26px;
++     font-weight: 300;
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+    }
+  }
+diff --cc frontend/tailwind.config.js
+index c967a06,207cc68..0000000
+--- a/frontend/tailwind.config.js
++++ b/frontend/tailwind.config.js
+@@@ -7,59 -7,43 +7,99 @@@ export default 
+    theme: {
+      extend: {
+        colors: {
+++<<<<<<< HEAD
+ +        primary: {
+ +          DEFAULT: "var(--color-primary)",
+ +          deep: "var(--color-primary-deep)",
+ +          press: "var(--color-primary-press)",
+ +          soft: "var(--color-primary-soft)",
+ +          "bg-subdued-hover": "var(--color-primary-bg-subdued-hover)",
+ +        },
+ +        brand: {
+ +          dark: {
+ +            900: "var(--color-brand-dark-900)",
+ +          }
+ +        },
+ +        ink: {
+ +          DEFAULT: "var(--color-ink)",
+ +          secondary: "var(--color-ink-secondary)",
+ +          mute: "var(--color-ink-mute)",
+ +          mute2: "var(--color-ink-mute-2)",
+ +        },
+ +        "on-primary": "var(--color-on-primary)",
+ +        canvas: {
+ +          DEFAULT: "var(--color-canvas)",
+ +          soft: "var(--color-canvas-soft)",
+ +          cream: "var(--color-canvas-cream)",
+ +        },
+ +        hairline: {
+ +          DEFAULT: "var(--color-hairline)",
+ +          input: "var(--color-hairline-input)",
+ +        },
+ +        ruby: "var(--color-ruby)",
+ +        magenta: "var(--color-magenta)",
+ +        lemon: "var(--color-lemon)",
+ +        "shadow-blue": "var(--color-shadow-blue)"
+ +      },
+ +      spacing: {
+ +        xxs: "var(--spacing-xxs)",
+ +        xs: "var(--spacing-xs)",
+ +        sm: "var(--spacing-sm)",
+ +        md: "var(--spacing-md)",
+ +        lg: "var(--spacing-lg)",
+ +        xl: "var(--spacing-xl)",
+ +        xxl: "var(--spacing-xxl)",
+ +        huge: "var(--spacing-huge)",
+ +      },
+ +      borderRadius: {
+ +        xs: "var(--radius-xs)",
+ +        sm: "var(--radius-sm)",
+ +        md: "var(--radius-md)",
+ +        lg: "var(--radius-lg)",
+ +        xl: "var(--radius-xl)",
+ +        pill: "var(--radius-pill)",
+ +      },
+ +      fontFamily: {
+ +        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+++=======
++         dark: {
++           bg: "#0d253d", // ink
++           card: "#1c1e54", // brand-dark-900
++           border: "#273951" // ink-secondary
++         },
++         primary: {
++           DEFAULT: "#533afd",
++           deep: "#4434d4",
++           press: "#2e2b8c",
++           soft: "#665efd",
++           bgSubduedHover: "#b9b9f9"
++         },
++         ink: {
++           DEFAULT: "#0d253d",
++           secondary: "#273951",
++           mute: "#64748d",
++           mute2: "#61718a"
++         },
++         canvas: {
++           DEFAULT: "#ffffff",
++           soft: "#f6f9fc",
++           cream: "#f5e9d4"
++         },
++         hairline: {
++           DEFAULT: "#e3e8ee",
++           input: "#a8c3de"
++         },
++         accent: {
++           ruby: "#ea2261",
++           magenta: "#f96bee",
++           lemon: "#9b6829",
++           shadowBlue: "#003770"
++         }
++       },
++       fontFamily: {
++         sans: ["sohne-var", "'SF Pro Display'", "system-ui", "-apple-system", "sans-serif"],
++         display: ["sohne-var", "'SF Pro Display'", "system-ui", "-apple-system", "sans-serif"]
+++>>>>>>> 69288debb7fc53bba65ae6d6e32aad4c323bf91e
+        }
+      },
+    },
