@@ -4,7 +4,26 @@
 
 body {
   margin: 0;
-  background-color: #0B0F19;
-  color: #F3F4F6;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: theme('colors.dark.bg'); /* Default dashboard shell bg */
+  color: theme('colors.canvas.DEFAULT');
+  font-family: theme('fontFamily.sans');
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  .tabular-nums-money {
+    font-feature-settings: "tnum", "ss01";
+    letter-spacing: -0.42px;
+  }
+  
+  .display-text-hero {
+    letter-spacing: -1.4px;
+    font-weight: 300;
+  }
+  
+  .display-text-md {
+    letter-spacing: -0.26px;
+    font-weight: 300;
+  }
 }
