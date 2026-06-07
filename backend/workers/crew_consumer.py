@@ -1,9 +1,10 @@
-﻿# STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
+# STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
 import asyncio
 from redis.asyncio import Redis
 from backend.app.core.config import settings
 from backend.app.core.event_bus import EventBus
 from backend.app.core.crew_registry import load_crews, get_crew
+from backend.app.core.tool_registry import register_tools
 from backend.app.memory.repository import SupabaseRepository
 from backend.app.core.supabase_client import get_supabase_client
 from backend.app.services.crew_executor import execute_crew
@@ -15,6 +16,8 @@ logger = get_logger("crew_worker")
 async def main():
     logger.info("Initializing Crew Execution worker...")
     load_crews()  # Start watchdog watcher
+    tools = register_tools()
+    logger.info(f"Registered {len(tools)} swarm tools for worker execution.")
 
     redis_client = Redis.from_url(settings.REDIS_URL)
     event_bus = EventBus(redis_client)
@@ -27,8 +30,8 @@ async def main():
         user_id = message.get("user_id")
         token = message.get("token")
 
-        # Load details
-        db = get_supabase_client(token)
+        # Connect to Supabase
+        db = get_supabase_client(settings.SUPABASE_SERVICE_KEY)
         repo = SupabaseRepository()
         run = await repo.get_swarm_run(db, swarm_run_id)
         if not run:

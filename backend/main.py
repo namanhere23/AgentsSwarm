@@ -45,6 +45,10 @@ async def lifespan(app: FastAPI):
     )
 
     from backend.app.services.scheduler import SwarmScheduler
+    from backend.app.core.crew_registry import load_crews
+
+    # Load crews from the YAML files
+    load_crews()
 
     scheduler = SwarmScheduler()
     scheduler.start()

@@ -1,5 +1,6 @@
 // STUB — Implemented by: workstream/0-architect
 export type WebSocketEventType =
+  | 'TRACE_BOOTSTRAP'
   | 'TASK_STARTED'
   | 'TASK_COMPLETED'
   | 'AGENT_THOUGHT'
@@ -8,12 +9,20 @@ export type WebSocketEventType =
   | 'APPROVAL_REJECTED'
   | 'SWARM_STARTED'
   | 'SWARM_COMPLETED'
+  | 'SWARM_FAILED'
   | 'BRIEFING_READY';
 
 export interface WebSocketEvent {
   type: WebSocketEventType;
   swarm_run_id: string;
   data: Record<string, unknown>;
+}
+
+export interface TraceBootstrapTask {
+  task_id: string;
+  agent: string;
+  description: string;
+  status?: 'pending' | 'running' | 'completed' | 'failed';
 }
 
 export interface ApprovalRequestedData {

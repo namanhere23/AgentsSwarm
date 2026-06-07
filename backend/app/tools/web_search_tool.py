@@ -15,6 +15,11 @@ class WebSearchTool(SwarmTool):
         "with title, url, and snippet fields."
     )
 
+    def __init__(self, user_id: str | None = None, redis_client=None):
+        super().__init__()
+        self.user_id = user_id
+        self.redis_client = redis_client
+
     async def _run(self, input: str, redis_client=None, user_id: str = None) -> str:
         # 1. Mock Check Guard
         if os.getenv("MOCK_TOOLS", "false").lower() == "true":
@@ -34,6 +39,8 @@ class WebSearchTool(SwarmTool):
             )
 
         # 2. Check Rate Limit
+        redis_client = redis_client or self.redis_client
+        user_id = user_id or self.user_id
         if redis_client and user_id:
             limiter = RateLimiter()
             await limiter.check_tool_rate_limit(redis_client, self.name, user_id)

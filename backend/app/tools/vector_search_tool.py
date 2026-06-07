@@ -10,8 +10,9 @@ class VectorSearchTool(SwarmTool):
     name = "VectorSearchTool"
     description = "Searches the vector store for semantic matches. Input: query string. Output: JSON array of matches."
 
-    def __init__(self):
+    def __init__(self, user_id: str | None = None):
         super().__init__()
+        self.user_id = user_id
         self.vstore = VectorStore()
         # Initialize small sentence transformer for ad-hoc embedding generation
         self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
@@ -28,6 +29,7 @@ class VectorSearchTool(SwarmTool):
                 ]
             )
 
+        user_id = user_id or self.user_id
         if not user_id:
             return json.dumps({"error": "user_id context missing for vector search"})
 

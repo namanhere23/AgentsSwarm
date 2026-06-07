@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS scheduled_swarms (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     crew_id VARCHAR NOT NULL,
     objective TEXT NOT NULL,
     cron_expression VARCHAR NOT NULL,

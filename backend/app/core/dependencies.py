@@ -18,6 +18,13 @@ async def get_current_user(request: Request) -> str:
     token = auth_header.split(" ")[1]
     uid = await verify_firebase_token(token)
 
+    # Sync Firebase UID into Supabase users table to satisfy foreign keys
+    try:
+        db = get_supabase_client(token)
+        res = db.table("users").upsert({"id": uid}).execute()
+    except Exception as e:
+        print("ERROR IN UPSERT USER:", e)
+
     # Store both user_id and token on request state for downstream use
     request.state.user_id = uid
     request.state.token = token

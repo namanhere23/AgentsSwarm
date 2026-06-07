@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS memory_events (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     swarm_run_id UUID NOT NULL REFERENCES swarm_runs(id) ON DELETE CASCADE,
     agent_role VARCHAR NOT NULL,
     task_description TEXT NOT NULL,

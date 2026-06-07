@@ -1,4 +1,4 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from croniter import croniter
 from datetime import datetime, timezone
 from redis.asyncio import Redis
@@ -14,7 +14,7 @@ class SwarmScheduler:
     """Monitors scheduled_swarms tables and enqueues runs that are due."""
 
     def __init__(self):
-        self.scheduler = BackgroundScheduler(timezone="UTC")
+        self.scheduler = AsyncIOScheduler(timezone="UTC")
         self.redis_client = None
 
     def start(self):
@@ -34,9 +34,7 @@ class SwarmScheduler:
 
     async def check_scheduled_swarms(self):
         """Query Postgres, parse schedules, and enqueue due runs."""
-        db = get_supabase_client(
-            "service_token"
-        )  # Service account bypass for scheduled loops
+        db = get_supabase_client(settings.SUPABASE_SERVICE_KEY)
 
         now = datetime.now(timezone.utc)
         response = (

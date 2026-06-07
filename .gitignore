@@ -104,3 +104,41 @@ Agent_Swarms_PRD.md
 PHASE_*.md
 ./forward_docs
 DESIGN.md
+
+# User-requested ignores
+# Test files
+tests/
+**/test_*.py
+**/*_test.py
+
+# Prototype and submission files/folders
+prototype/
+prototypes/
+submission/
+submissions/
+**/prototype/**
+**/prototypes/**
+**/submission/**
+**/submissions/**
+
+# Image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.bmp
+*.tif
+*.tiff
+
+# Presentation files
+*.ppt
+*.pptx
+
+# Checkpoint/check files
+check_redis_stream.py
+check_redis.py
+
+supabase/
+forward_docs/

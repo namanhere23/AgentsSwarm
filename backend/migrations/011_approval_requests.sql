@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS approval_requests (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     swarm_run_id UUID NOT NULL REFERENCES swarm_runs(id) ON DELETE CASCADE,
     tool_name VARCHAR NOT NULL,
     proposed_payload JSONB NOT NULL,

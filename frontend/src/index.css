@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,27 +6,46 @@
 
 @layer base {
   :root {
-    /* Colors */
-    --color-primary: #533afd;
-    --color-primary-deep: #4434d4;
-    --color-primary-press: #2e2b8c;
-    --color-primary-soft: #665efd;
-    --color-primary-bg-subdued-hover: #b9b9f9;
-    --color-brand-dark-900: #1c1e54;
-    --color-ink: #0d253d;
-    --color-ink-secondary: #273951;
-    --color-ink-mute: #64748d;
-    --color-ink-mute-2: #61718a;
-    --color-on-primary: #ffffff;
-    --color-canvas: #ffffff;
-    --color-canvas-soft: #f6f9fc;
-    --color-canvas-cream: #f5e9d4;
-    --color-hairline: #e3e8ee;
-    --color-hairline-input: #a8c3de;
-    --color-ruby: #ea2261;
-    --color-magenta: #f96bee;
-    --color-lemon: #9b6829;
-    --color-shadow-blue: #003770;
+    /* Colors - Premium Dark Mode */
+    --color-primary: #00e5ff;
+    --color-primary-deep: #00b4d8;
+    --color-primary-press: #0077b6;
+    --color-primary-soft: rgba(0, 229, 255, 0.2);
+    --color-primary-bg-subdued-hover: rgba(0, 229, 255, 0.1);
+    
+    --color-brand-dark-900: #0a0e17;
+    --color-brand-dark-800: #111827;
+    --color-brand-dark-700: #1f2937;
+    
+    --color-ink: #f8fafc;
+    --color-ink-secondary: #cbd5e1;
+    --color-ink-mute: #94a3b8;
+    --color-ink-mute-2: #64748b;
+    
+    --color-on-primary: #020617;
+    
+    --color-canvas: #0f172a;
+    --color-canvas-soft: #1e293b;
+    --color-canvas-cream: #334155;
+    
+    --color-surface: rgba(30, 41, 59, 0.5);
+    --color-surface-elevated: rgba(30, 41, 59, 0.8);
+    
+    --color-edge-default: rgba(255, 255, 255, 0.1);
+    --color-edge-hover: rgba(255, 255, 255, 0.2);
+    
+    --color-hairline: rgba(255, 255, 255, 0.05);
+    --color-hairline-input: rgba(255, 255, 255, 0.15);
+    
+    --color-ruby: #f43f5e;
+    --color-magenta: #d946ef;
+    --color-lemon: #eab308;
+    --color-shadow-blue: rgba(0, 0, 0, 0.5);
+    --color-cobalt: #3b82f6;
+    
+    --color-dark-bg: #0b0f19;
+    --color-dark-card: #151b2b;
+    --color-dark-border: rgba(255, 255, 255, 0.1);
 
     /* Spacing */
     --spacing-xxs: 2px;

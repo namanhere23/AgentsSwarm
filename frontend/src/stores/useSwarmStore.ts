@@ -11,6 +11,8 @@ interface SwarmState {
   setActiveSwarm: (id: string | null) => void;
   setSwarmStatus: (status: 'queued' | 'running' | 'completed' | 'failed') => void;
   setBriefingUrl: (url: string | null) => void;
+  replaceTasks: (tasks: TaskTrace[]) => void;
+  upsertTask: (task: TaskTrace) => void;
   addTask: (task: TaskTrace) => void;
   updateTask: (id: string, update: Partial<TaskTrace>) => void;
   clearStore: () => void;
@@ -25,7 +27,25 @@ export const useSwarmStore = create<SwarmState>((set) => ({
   setActiveSwarm: (id) => set({ activeSwarmId: id }),
   setSwarmStatus: (status) => set({ swarmStatus: status }),
   setBriefingUrl: (url) => set({ briefingUrl: url }),
-  addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
+  replaceTasks: (tasks) => set({ tasks }),
+  upsertTask: (task) => set((state) => {
+    const exists = state.tasks.some((t) => t.id === task.id);
+    if (!exists) {
+      return { tasks: [...state.tasks, task] };
+    }
+    return {
+      tasks: state.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
+    };
+  }),
+  addTask: (task) => set((state) => {
+    const exists = state.tasks.some((t) => t.id === task.id);
+    if (exists) {
+      return {
+        tasks: state.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
+      };
+    }
+    return { tasks: [...state.tasks, task] };
+  }),
   updateTask: (id, update) => set((state) => ({
     tasks: state.tasks.map((t) => t.id === id ? { ...t, ...update } : t)
   })),
