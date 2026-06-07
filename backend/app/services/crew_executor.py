@@ -1,4 +1,4 @@
-# STUB-FILL — Implemented by: workstream/3a-crew-execution-engine
+
 from crewai import Crew, Process, Task
 from backend.app.core.logging import get_logger
 from backend.app.core.supabase_client import get_supabase_client
@@ -21,6 +21,7 @@ logger = get_logger("crew_executor")
 
 # Initialize checkpointer pool
 _checkpointer = None
+
 
 def get_checkpointer():
     global _checkpointer
