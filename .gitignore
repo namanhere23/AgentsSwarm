@@ -98,6 +98,8 @@ Thumbs.db
 # Logs
 *.log
 
-# Ignore phase docs and PRD
-PHASE_*.md
+# Documentation and planning
+docs/
 Agent_Swarms_PRD.md
+PHASE_*.md
+DESIGN.md
