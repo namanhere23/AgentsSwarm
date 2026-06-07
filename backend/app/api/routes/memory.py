@@ -9,9 +9,23 @@ from backend.app.memory.ner_pipeline import extract_entities
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
-# Load SentenceTransformer once at module load
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-vstore = VectorStore()
+# Lazy load models to avoid blocking FastAPI startup
+_model = None
+_vstore = None
+
+def get_model():
+    global _model
+    if _model is None:
+        from sentence_transformers import SentenceTransformer
+        _model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    return _model
+
+def get_vstore():
+    global _vstore
+    if _vstore is None:
+        from backend.app.memory.vector_store import VectorStore
+        _vstore = VectorStore()
+    return _vstore
 
 
 @router.get("/search", response_model=MemorySearchResponse)
@@ -27,8 +41,8 @@ async def search_memory(
     repo = SupabaseRepository()
 
     # 1. Fetch top-50 results from ChromaDB cosine similarity search
-    query_vector = model.encode(q).tolist()
-    vector_results = vstore.query_memory(user_id, query_vector, n_results=50)
+    query_vector = get_model().encode(q).tolist()
+    vector_results = get_vstore().query_memory(user_id, query_vector, n_results=50)
 
     # 2. Fetch top-50 results from Postgres tsvector keyword search
     keyword_results = await repo.search_memory_keyword(db_client, user_id, q, limit=50)
@@ -194,7 +208,7 @@ async def create_memory_event(
             },
         )
 
-    vstore.upsert_memory(
+    get_vstore().upsert_memory(
         memory_event_id=record["id"],
         content=event["content"],
         metadata={

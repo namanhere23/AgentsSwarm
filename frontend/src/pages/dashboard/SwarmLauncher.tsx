@@ -124,9 +124,14 @@ export const SwarmLauncher: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
-      <div className="rounded-[12px] border border-dark-border bg-dark-card p-[32px] shadow-[rgba(0,55,112,0.08)_0_8px_24px,rgba(0,55,112,0.04)_0_2px_6px]">
-        <h2 className="text-[32px] font-light tracking-[-0.64px] text-canvas mb-6">Launch New Swarm Run</h2>
+    <div className="w-full max-w-3xl mx-auto py-12 px-6">
+      <div className="rounded-2xl border border-edge-default bg-surface-elevated/60 backdrop-blur-2xl p-10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden">
+        {/* Subtle inner glow */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
+        
+        <h2 className="text-3xl font-light tracking-tight text-white mb-8 flex items-center">
+          <span className="text-primary mr-3">⚡</span> Launch Swarm
+        </h2>
         
         {error && (
           <div className="mb-4 rounded-[8px] bg-accent-ruby/20 border border-accent-ruby p-3 text-[15px] text-canvas">
@@ -142,46 +147,51 @@ export const SwarmLauncher: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-[15px] font-light text-ink-mute mb-2">Select Agent Swarm Crew:</label>
-            <select
-              value={selectedCrew}
-              onChange={(e) => setSelectedCrew(e.target.value)}
-              className="w-full rounded-[6px] border border-hairline-input bg-canvas p-[8px_12px] text-ink focus:outline-none focus:border-primary"
-            >
-              {crews.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <label className="block text-sm font-medium text-ink-secondary mb-2 uppercase tracking-wider">Select Agent Crew</label>
+            <div className="relative">
+              <select
+                value={selectedCrew}
+                onChange={(e) => setSelectedCrew(e.target.value)}
+                className="w-full appearance-none rounded-xl border border-hairline-input bg-surface p-4 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
+              >
+                {crews.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-brand-dark-900 text-white">{c.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-primary">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
           </div>
 
           <div>
-            <label className="block text-[15px] font-light text-ink-mute mb-2">Objective Text:</label>
+            <label className="block text-sm font-medium text-ink-secondary mb-2 uppercase tracking-wider">Objective</label>
             <textarea
               value={objective}
               onChange={(e) => setObjective(e.target.value)}
-              placeholder="What goal should the agent crew accomplish?"
+              placeholder="Describe the exact goal you want the swarm to accomplish..."
               maxLength={2000}
               rows={5}
-              className="w-full rounded-[6px] border border-hairline-input bg-canvas p-[8px_12px] text-ink focus:outline-none focus:border-primary placeholder:text-ink-mute resize-none text-[15px] font-light"
+              className="w-full rounded-xl border border-hairline-input bg-surface p-4 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all shadow-inner placeholder:text-ink-mute/50 resize-none text-[15px]"
             />
-            <div className="flex justify-between mt-1 text-[13px] text-ink-mute font-normal tabular-nums-money">
-              <span>Limit execution actions where possible.</span>
-              <span>{objective.length}/2000 characters</span>
+            <div className="flex justify-between mt-2 text-xs text-ink-mute font-medium">
+              <span>Be as specific as possible.</span>
+              <span className={objective.length > 1900 ? 'text-ruby' : ''}>{objective.length}/2000 characters</span>
             </div>
           </div>
 
           {/* Audio recording widgets */}
-          <div className="rounded-[8px] border border-hairline-input bg-canvas-soft p-[16px] flex items-center justify-between">
-            <div className="text-[14px] text-ink-mute font-light">
-              {recording ? 'Recording voice objective...' : 'Or use voice recognition triggers'}
-              {uploadProgress !== null && <div className="mt-1 font-normal text-primary">Uploading: {uploadProgress}%</div>}
+          <div className="rounded-xl border border-hairline-input bg-surface/30 p-5 flex items-center justify-between transition-all hover:bg-surface">
+            <div className="text-sm text-ink-secondary font-medium">
+              {recording ? 'Listening to your objective...' : 'Or speak your objective'}
+              {uploadProgress !== null && <div className="mt-1 text-xs text-primary animate-pulse">Transcribing: {uploadProgress}%</div>}
             </div>
             
             {recording ? (
               <button
                 type="button"
                 onClick={stopRecording}
-                className="h-10 w-10 bg-ruby rounded-full flex items-center justify-center text-on-primary animate-pulse shadow-md"
+                className="h-12 w-12 bg-ruby rounded-full flex items-center justify-center text-white animate-pulse shadow-[0_0_20px_rgba(234,34,97,0.6)] hover:bg-ruby/80 transition-all"
               >
                 ■
               </button>
@@ -190,9 +200,9 @@ export const SwarmLauncher: React.FC = () => {
                 type="button"
                 onClick={startRecording}
                 disabled={loading}
-                className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-on-primary hover:bg-primary-press shadow-md disabled:opacity-50"
+                className="h-12 w-12 bg-surface-elevated border border-primary/50 rounded-full flex items-center justify-center text-primary hover:bg-primary/20 hover:scale-105 transition-all shadow-lg disabled:opacity-50"
               >
-                🎙
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" /></svg>
               </button>
             )}
           </div>
@@ -200,9 +210,14 @@ export const SwarmLauncher: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !objective.trim()}
-            className="w-full rounded-full bg-primary p-[8px_16px] text-[16px] font-normal text-on-primary transition-all hover:bg-primary-press hover:shadow-lg disabled:opacity-50 active:scale-95 flex items-center justify-center"
+            className="w-full rounded-xl bg-gradient-to-r from-primary to-primary-deep p-4 text-[16px] font-bold tracking-wide text-white transition-all hover:shadow-[0_0_25px_rgba(0,229,255,0.4)] disabled:opacity-50 disabled:hover:shadow-none hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center"
           >
-            {loading ? 'Queueing swarm...' : 'Launch Swarm'}
+            {loading ? (
+              <div className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Deploying Swarm...
+              </div>
+            ) : 'Launch Swarm'}
           </button>
         </form>
       </div>

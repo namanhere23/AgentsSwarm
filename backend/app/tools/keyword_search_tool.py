@@ -10,12 +10,19 @@ class KeywordSearchTool(SwarmTool):
     name = "KeywordSearchTool"
     description = "Performs Postgres full-text indexing searches. Input: search query terms. Output: JSON array of hits."
 
+    def __init__(self, user_id: str | None = None, token: str | None = None):
+        super().__init__()
+        self.user_id = user_id
+        self.token = token
+
     async def _run(self, input: str, user_id: str = None, token: str = None) -> str:
         if os.getenv("MOCK_TOOLS", "false").lower() == "true":
             return json.dumps(
                 [{"id": "00000", "content": "Mock keyword matched event metadata"}]
             )
 
+        user_id = user_id or self.user_id
+        token = token or self.token
         if not user_id or not token:
             return json.dumps(
                 {"error": "Auth headers context missing for database search"}

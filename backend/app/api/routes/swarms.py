@@ -115,14 +115,15 @@ async def get_swarm_run(id: str, user_id: str = Depends(get_current_user)):
 async def get_swarm_report(
     id: str, format: str = "markdown", user_id: str = Depends(get_current_user)
 ):
-    file_path = f"/app/workspace/{id}.md"
+    workspace_dir = os.path.abspath(settings.WORKSPACE_DIR)
+    file_path = os.path.join(workspace_dir, f"{id}.md")
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Report not found")
 
     if format == "pdf":
         import subprocess
 
-        pdf_path = f"/app/workspace/{id}.pdf"
+        pdf_path = os.path.join(workspace_dir, f"{id}.pdf")
         try:
             subprocess.run(
                 [

@@ -1,4 +1,4 @@
-﻿/** @type {import('tailwindcss').Config} */
+/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -31,6 +31,14 @@ export default {
           soft: "var(--color-canvas-soft)",
           cream: "var(--color-canvas-cream)",
         },
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          elevated: "var(--color-surface-elevated)",
+        },
+        edge: {
+          DEFAULT: "var(--color-edge-default)",
+          hover: "var(--color-edge-hover)",
+        },
         hairline: {
           DEFAULT: "var(--color-hairline)",
           input: "var(--color-hairline-input)",
@@ -38,7 +46,13 @@ export default {
         ruby: "var(--color-ruby)",
         magenta: "var(--color-magenta)",
         lemon: "var(--color-lemon)",
-        "shadow-blue": "var(--color-shadow-blue)"
+        "shadow-blue": "var(--color-shadow-blue)",
+        cobalt: "var(--color-cobalt)",
+        dark: {
+          bg: "var(--color-dark-bg)",
+          card: "var(--color-dark-card)",
+          border: "var(--color-dark-border)",
+        }
       },
       spacing: {
         xxs: "var(--spacing-xxs)",

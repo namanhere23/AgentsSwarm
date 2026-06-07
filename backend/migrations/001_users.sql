@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users (
-    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) NOT NULL PRIMARY KEY,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     preferences JSONB NULL
 );

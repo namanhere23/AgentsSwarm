@@ -47,7 +47,7 @@ export const Login: React.FC = () => {
           <h1 className="display-md text-ink">Agent Swarms</h1>
           <p className="mt-2 caption text-ink-mute">Multi-Agent Operating System Coordinator</p>
         </div>
-        
+
         {error && (
           <div className="mb-4 rounded-md bg-ruby/10 border border-ruby/20 p-3 text-xs text-ruby">
             {error}
