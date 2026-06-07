@@ -2,6 +2,7 @@
 import asyncio
 from backend.app.core.config import settings
 
+
 class ParallelExecutor:
     def __init__(self):
         self.max_workers = int(settings.MAX_PARALLEL_TASKS)
