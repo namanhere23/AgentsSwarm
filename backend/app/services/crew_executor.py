@@ -1,4 +1,3 @@
-
 from crewai import Crew, Process, Task
 from backend.app.core.logging import get_logger
 from backend.app.core.supabase_client import get_supabase_client
