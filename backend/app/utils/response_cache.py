@@ -9,10 +9,9 @@ served transparently.
 
 import json
 import hashlib
-import os
 import logging
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger("ResponseCache")
 CACHE_VERSION = "v1"

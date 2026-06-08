@@ -1,3 +1,5 @@
+import litellm
+litellm.drop_params = True  # Drop unsupported params like cache_breakpoint (Groq doesn't support it)
 from crewai import Crew, Process, Task
 from backend.app.core.logging import get_logger
 from backend.app.core.supabase_client import get_supabase_client
@@ -56,6 +58,13 @@ async def execute_crew(
 
     try:
         # Resolve tools lists safely mapping agents by their assumed roles
+        import os, litellm
+        real_key = os.getenv("GROQ_API_KEY_1") or os.getenv("GROQ_API_KEY")
+        if real_key and real_key != "dummy_key_for_testing":
+            os.environ["GROQ_API_KEY"] = real_key
+        # Tell LiteLLM to silently drop unsupported params (e.g. cache_breakpoint on Groq)
+        litellm.drop_params = True
+
         planner_tools = []
         retriever_tools = []
         executor_tools = []
@@ -98,7 +107,7 @@ async def execute_crew(
         )
 
         crew = Crew(
-            agents=[orchestrator, planner, retriever, executor, validator],
+            agents=[planner, retriever, executor, validator],
             tasks=[task1, task2, task3],
             process=Process.hierarchical,
             manager_agent=orchestrator,
@@ -106,7 +115,7 @@ async def execute_crew(
         )
 
         # 5. Kickoff
-        result = crew.kickoff()
+        result = await crew.kickoff_async()
 
         # 6. Success - Save reports
         output_text = str(result)

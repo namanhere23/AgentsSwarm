@@ -14,7 +14,7 @@ param(
     [string]$Objective
 )
 
-$API_URL = "https://api.your-deployed-nexsus.com" # Replace with actual backend
+$API_URL = "http://127.0.0.1:8000"
 
 # Check for API key
 $apiKey = $env:NEXSUS_API_KEY

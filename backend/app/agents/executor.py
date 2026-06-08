@@ -1,5 +1,5 @@
 from crewai import Agent
-from backend.app.services.llm_adapter import LLMAdapter
+
 
 
 def create_executor(tools: list) -> Agent:
@@ -9,8 +9,7 @@ def create_executor(tools: list) -> Agent:
         backstory="You are a precise execution specialist. You construct exact API payloads and system commands. You never act without human approval on external mutations.",
         allow_delegation=False,
         tools=tools,
-        llm=LLMAdapter(
-            model="groq/llama-3.1-70b-versatile", temperature=0.0, max_tokens=1024
-        ),
+        llm="groq/llama3-8b-8192",
         verbose=True,
     )
+

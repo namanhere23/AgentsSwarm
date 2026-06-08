@@ -14,8 +14,6 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy offline model packages
-RUN python -m spacy download en_core_web_sm
 
 # Copy application code (context is root)
 COPY . .

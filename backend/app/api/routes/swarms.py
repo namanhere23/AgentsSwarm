@@ -35,6 +35,9 @@ async def create_swarm(
     redis_client: Redis = Depends(get_redis),
 ):
     # 1. Verify Crew ID
+    if request.crew_id == "string" or not request.crew_id:
+        request.crew_id = "research-crew"
+
     crew_def = get_crew(request.crew_id)
     if not crew_def:
         raise HTTPException(status_code=404, detail="crew_id not registered")

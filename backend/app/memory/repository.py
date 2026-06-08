@@ -1,14 +1,17 @@
 # STUB-FILL — Implemented by: workstream/2a-memory-system
 from typing import Optional, List
 from supabase import Client
+from fastapi.concurrency import run_in_threadpool
 
 
 class SupabaseRepository:
     """The single centralized data repository layer interfacing with Supabase PostgreSQL."""
 
     async def insert_swarm_run(self, client: Client, data: dict) -> dict:
-        response = client.table("swarm_runs").insert(data).execute()
-        return response.data[0] if response.data else {}
+        def _sync_call():
+            response = client.table("swarm_runs").insert(data).execute()
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
     async def update_swarm_run_status(
         self,
@@ -23,18 +26,23 @@ class SupabaseRepository:
             from datetime import datetime
 
             update_data["completed_at"] = datetime.utcnow().isoformat()
-        response = (
-            client.table("swarm_runs").update(update_data).eq("id", run_id).execute()
-        )
-        return response.data[0] if response.data else {}
+            
+        def _sync_call():
+            response = client.table("swarm_runs").update(update_data).eq("id", run_id).execute()
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
     async def get_swarm_run(self, client: Client, run_id: str) -> Optional[dict]:
-        response = client.table("swarm_runs").select("*").eq("id", run_id).execute()
-        return response.data[0] if response.data else None
+        def _sync_call():
+            response = client.table("swarm_runs").select("*").eq("id", run_id).execute()
+            return response.data[0] if response.data else None
+        return await run_in_threadpool(_sync_call)
 
     async def insert_memory_event(self, client: Client, data: dict) -> dict:
-        response = client.table("memory_events").insert(data).execute()
-        return response.data[0] if response.data else {}
+        def _sync_call():
+            response = client.table("memory_events").insert(data).execute()
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
     async def insert_memory_entity(self, client: Client, data: dict) -> dict:
         response = client.table("memory_entities").insert(data).execute()

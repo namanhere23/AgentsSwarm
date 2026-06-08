@@ -1,4 +1,4 @@
-﻿# STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
+# STUB-FILL ΓÇö Implemented by: workstream/3a-crew-execution-engine
 import asyncio
 from redis.asyncio import Redis
 from backend.app.core.config import settings
@@ -22,6 +22,7 @@ async def main():
     async for message in event_bus.consume(
         "swarm_queue", "crew_worker_group", "worker_node_1"
     ):
+        with open("C:/Users/Hema/Downloads/AgentsSwarm/crew_debug.txt", "a") as df: df.write(f"Received swarm execution task message: {message}\n")
         logger.info(f"Received swarm execution task message: {message}")
         swarm_run_id = message.get("swarm_run_id")
         user_id = message.get("user_id")
@@ -30,13 +31,21 @@ async def main():
         # Load details
         db = get_supabase_client(token)
         repo = SupabaseRepository()
-        run = await repo.get_swarm_run(db, swarm_run_id)
-        if not run:
-            logger.error(f"Swarm run {swarm_run_id} details not found.")
+        try:
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/crew_debug.txt", "a") as df: df.write(f"Fetching run {swarm_run_id} from DB...\n")
+            run = await repo.get_swarm_run(db, swarm_run_id)
+            if not run:
+                with open("C:/Users/Hema/Downloads/AgentsSwarm/crew_debug.txt", "a") as df: df.write(f"Swarm run {swarm_run_id} details not found.\n")
+                logger.error(f"Swarm run {swarm_run_id} details not found.")
+                continue
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/crew_debug.txt", "a") as df: df.write(f"Run found: {run['crew_id']}\n")
+        except Exception as e:
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/crew_debug.txt", "a") as df: df.write(f"Error fetching DB: {e}\n")
             continue
 
         crew_def = get_crew(run["crew_id"])
         if not crew_def:
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/crew_debug.txt", "a") as df: df.write(f"Crew definition {run['crew_id']} not registered.\n")
             logger.error(f"Crew definition {run['crew_id']} not registered.")
             continue
 

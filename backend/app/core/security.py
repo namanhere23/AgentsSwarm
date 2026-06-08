@@ -12,7 +12,18 @@ async def verify_firebase_token(token: str) -> str:
             raise HTTPException(
                 status_code=401, detail="Invalid or empty token in development"
             )
-        return token
+        import uuid
+        import hashlib
+        try:
+            # Check if token is already a valid UUID
+            uuid_obj = uuid.UUID(token)
+            return str(uuid_obj)
+        except ValueError:
+            # If not, generate a consistent UUID based on the dummy token string
+            # This prevents Postgres 'invalid input syntax for type uuid' errors
+            m = hashlib.md5()
+            m.update(token.encode("utf-8"))
+            return str(uuid.UUID(m.hexdigest()))
 
     try:
         decoded_token = auth.verify_id_token(token)

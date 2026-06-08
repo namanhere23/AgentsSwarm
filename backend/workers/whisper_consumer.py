@@ -31,7 +31,12 @@ async def main():
             keys.append(bare.strip())
 
     api_key = keys[0] if keys else ""
-    groq_client = AsyncGroq(api_key=api_key)
+    
+    # Fix HTTP/2 deadlocks by forcing HTTP/1.1
+    import httpx
+    http_client = httpx.AsyncClient(http1=True, http2=False)
+    groq_client = AsyncGroq(api_key=api_key, http_client=http_client)
+    
     logger.info("Groq API client initialized for Whisper STT.")
 
     redis_client = Redis.from_url(settings.REDIS_URL)
@@ -47,8 +52,10 @@ async def main():
         crew_id = message.get("crew_id")
 
         if not audio_path or not os.path.exists(audio_path):
-            logger.error("Audio target path missing or unreachable.")
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Missing audio path: {audio_path}\n")
             continue
+
+        with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Audio found: {audio_path}. Converting...\n")
 
         # 1. Downsample audio to 16kHz mono WAV using local ffmpeg
         temp_dir = tempfile.gettempdir()
@@ -69,12 +76,14 @@ async def main():
                 check=True,
                 capture_output=True,
             )
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Ffmpeg conversion successful.\n")
         except Exception as e:
-            logger.error(f"Ffmpeg conversion crashed: {str(e)}")
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Ffmpeg error: {str(e)}\n")
             continue
 
         # 2. Execute Groq Whisper transcription
         try:
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Calling Groq STT...\n")
             with open(converted_wav, "rb") as file:
                 transcription = await groq_client.audio.transcriptions.create(
                     file=(converted_wav, file.read()),
@@ -82,29 +91,43 @@ async def main():
                     response_format="json",
                 )
             transcribed_text = transcription.text.strip()
-            logger.info(f"Transcription complete: '{transcribed_text}'")
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Transcription: {transcribed_text}\n")
 
-            # 3. Post objective to /swarms to trigger crew runs
-            # Use authenticated client internally
-            async with httpx.AsyncClient() as client:
-                res = await client.post(
-                    "http://localhost:8000/swarms",
-                    json={"crew_id": crew_id, "objective": transcribed_text},
-                    headers={
-                        "Authorization": f"Bearer {user_id}"
-                    },  # Use user_id as token bypass in dev
+            # 3. Update existing swarm run and push to swarm_queue
+            swarm_run_id = message.get("swarm_run_id")
+            token = message.get("token")
+            
+            if swarm_run_id and token:
+                from backend.app.core.supabase_client import get_supabase_client
+                db_client = get_supabase_client(token)
+                
+                # Update objective and set status to queued
+                db_client.table("swarm_runs").update({
+                    "objective": transcribed_text,
+                    "status": "queued"
+                }).eq("id", swarm_run_id).execute()
+                
+                # Push to crew execution queue
+                await event_bus.publish(
+                    "swarm_queue",
+                    {
+                        "swarm_run_id": swarm_run_id,
+                        "user_id": user_id,
+                        "token": token,
+                    },
                 )
-                logger.info(
-                    f"Swarm run queued from voice trigger: status={res.status_code}"
-                )
+                with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Updated swarm run {swarm_run_id} and queued.\n")
+            else:
+                with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write("Missing swarm_run_id or token in message.\n")
 
             # 4. Acknowledge message queue
             msg_id = message.get("_msg_id")
             if msg_id:
                 await redis_client.xack("stt_queue", "whisper_worker_group", msg_id)
+                with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Acked message {msg_id}\n")
 
         except Exception as e:
-            logger.error(f"Whisper transcription failed: {str(e)}")
+            with open("C:/Users/Hema/Downloads/AgentsSwarm/worker_debug.txt", "a") as df: df.write(f"Transcription/POST error: {str(e)}\n")
         finally:
             # Cleanup temp assets
             for path in [audio_path, converted_wav]:

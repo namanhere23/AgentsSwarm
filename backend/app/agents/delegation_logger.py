@@ -28,3 +28,4 @@ def delegation_callback(
         )
     except RuntimeError:
         pass
+

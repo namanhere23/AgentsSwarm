@@ -1,6 +1,6 @@
 # STUB — Implemented by: workstream/3a-crew-execution-engine
 from crewai import Agent
-from backend.app.services.llm_adapter import LLMAdapter
+
 
 
 def create_replanner() -> Agent:
@@ -15,6 +15,7 @@ def create_replanner() -> Agent:
         backstory="You are an expert problem analyst. When a plan fails, you diagnose why and write a precise corrective plan.",
         allow_delegation=False,
         tools=[],
-        llm=LLMAdapter(model="llama-3.1-70b-versatile", agent_role="replanner"),
+        llm="groq/llama3-8b-8192",
         verbose=True,
     )
+

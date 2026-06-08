@@ -7,7 +7,6 @@ from backend.app.models.approval_models import (
     RejectResponse,
 )
 from backend.app.core.dependencies import get_current_user, get_db_client
-from backend.app.core.supabase_client import get_supabase_client
 from backend.app.core.event_bus import EventBus
 from backend.app.services.approval_gate import approval_gate
 from backend.app.core.config import settings

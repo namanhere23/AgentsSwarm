@@ -1,22 +1,25 @@
 # STUB-FILL — Implemented by: workstream/1a-backend-core
-from fastapi import Request, HTTPException
+from fastapi import Request, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.app.core.security import verify_firebase_token
 from backend.app.core.supabase_client import get_supabase_client
 
+security = HTTPBearer()
 
-async def get_current_user(request: Request) -> str:
+async def get_current_user(request: Request, auth: HTTPAuthorizationCredentials = Depends(security)) -> str:
     """Auth dependency extracting JWT credentials and storing them in request context."""
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
-
-    if not auth_header.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401, detail="Authorization scheme must be Bearer"
-        )
-
-    token = auth_header.split(" ")[1]
+    token = auth.credentials
     uid = await verify_firebase_token(token)
+
+    from backend.app.core.config import settings
+    if settings.ENVIRONMENT == "development":
+        # Auto-upsert dummy user to satisfy Foreign Key constraints
+        try:
+            db_client = get_supabase_client()
+            db_client.table("users").upsert({"id": uid}).execute()
+        except Exception:
+            # Safely ignore if user already exists or fails
+            pass
 
     # Store both user_id and token on request state for downstream use
     request.state.user_id = uid
