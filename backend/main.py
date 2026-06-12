@@ -1,8 +1,17 @@
 import os
 import sys
+import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Configure litellm to drop unsupported parameters for Groq
+import litellm
+litellm.drop_params = True
+# Additional litellm configuration to prevent cache-related parameters
+os.environ["LITELLM_CACHE"] = "false"
+os.environ["LITELLM_DROP_PARAMS"] = "true"
+litellm.set_verbose = False
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,13 +54,42 @@ async def lifespan(app: FastAPI):
     )
 
     from backend.app.services.scheduler import SwarmScheduler
+    from backend.app.core.crew_registry import load_crews
+    from backend.workers.crew_consumer import main as crew_consumer_main
+    from backend.app.core.logging import get_logger
+
+    logger = get_logger("lifespan")
+
+    # Load crews into registry
+    load_crews()
 
     scheduler = SwarmScheduler()
     scheduler.start()
 
+    # Start crew consumer as background task with error handling
+    async def crew_consumer_wrapper():
+        try:
+            await crew_consumer_main()
+        except asyncio.CancelledError:
+            logger.info("Crew consumer cancelled during shutdown")
+            raise
+        except Exception as e:
+            logger.error(f"Crew consumer crashed: {e}", exc_info=True)
+
+    crew_consumer_task = asyncio.create_task(crew_consumer_wrapper())
+
     yield
     # Cleanup logic (if any) goes here
-    scheduler.shutdown()
+    logger.info("Shutting down services...")
+    
+    # Cancel crew consumer and wait for graceful shutdown
+    crew_consumer_task.cancel()
+    try:
+        await crew_consumer_task
+    except asyncio.CancelledError:
+        pass
+    
+    await scheduler.shutdown()
 
 
 from fastapi.staticfiles import StaticFiles
@@ -87,6 +125,7 @@ from backend.app.api.routes import (  # noqa: E402
     audit,
     schedules,
     briefings,
+    test_ws_route,
 )
 
 app.include_router(health.router)
@@ -99,3 +138,4 @@ app.include_router(crews.router)
 app.include_router(audit.router)
 app.include_router(schedules.router)
 app.include_router(briefings.router)
+app.include_router(test_ws_route.router)

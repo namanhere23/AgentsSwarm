@@ -6,6 +6,17 @@
     <title>Agent Swarms</title>
   </head>
   <body>
+    <script>
+      // Automatically unregister rogue service workers from other projects
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('ServiceWorker unregistered');
+          }
+        });
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

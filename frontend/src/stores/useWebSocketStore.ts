@@ -1,91 +1,110 @@
-// NEW — Implemented by: workstream/3c-dashboard-trace
 import { create } from 'zustand';
-import { WebSocketEvent } from '../types/websocket';
 import { useSwarmStore } from './useSwarmStore';
 
 interface WebSocketState {
-  socket: WebSocket | null;
   isConnected: boolean;
+  abortController: AbortController | null;
   connect: (swarmRunId: string, token: string) => void;
   disconnect: () => void;
 }
 
 export const useWebSocketStore = create<WebSocketState>((set, get) => ({
-  socket: null,
   isConnected: false,
+  abortController: null,
   
-  connect: (swarmRunId, token) => {
+  connect: async (swarmRunId, token) => {
     // Prevent duplicate triggers
-    if (get().socket) return;
+    if (get().isConnected) return;
     
-    // Connect to backend WS endpoint (routed through dev proxy configuration)
-    const wsUrl = `ws://${window.location.host}/ws/${swarmRunId}?token=${token}`;
-    const ws = new WebSocket(wsUrl);
+    const effectiveToken = token || 'dev-token';
+    const sseUrl = `http://127.0.0.1:8000/sse/${swarmRunId}?token=${effectiveToken}`;
     
-    ws.onopen = () => {
-      set({ isConnected: true });
-    };
+    const abortController = new AbortController();
+    set({ isConnected: true, abortController });
     
-    ws.onmessage = (event) => {
-      try {
-        const payload: WebSocketEvent = jsonParseSafely(event.data);
-        if (!payload) return;
-        
-        // Forward message details to Swarms State Manager
-        const swarmStore = useSwarmStore.getState();
-        
-        if (payload.type === 'SWARM_STARTED') {
-          swarmStore.setSwarmStatus('running');
-        } else if (payload.type === 'SWARM_COMPLETED') {
-          swarmStore.setSwarmStatus('completed');
-        } else if (payload.type === 'TASK_STARTED') {
-          const taskData = payload.data as any;
-          swarmStore.addTask({
-            id: taskData.task_id,
-            agent: taskData.agent,
-            thought: 'Task initialized...',
-            action: '',
-            observation: '',
-            status: 'running'
-          });
-        } else if (payload.type === 'TASK_COMPLETED') {
-          const taskData = payload.data as any;
-          swarmStore.updateTask(taskData.task_id, {
-            status: 'completed',
-            observation: taskData.output
-          });
-        } else if (payload.type === 'AGENT_THOUGHT') {
-          const tData = payload.data as any;
-          swarmStore.updateTask(tData.task_id, {
-            thought: tData.thought,
-            action: tData.action
-          });
+    try {
+      const response = await fetch(sseUrl, {
+        signal: abortController.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
-      } catch (err) {
-        console.error('Error handling WebSocket message payload', err);
+      });
+      
+      console.log('[SSE] fetch started');
+      if (!response.body) throw new Error('No readable stream');
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      console.log('[SSE] reader loop starting');
+      while (true) {
+        const { done, value } = await reader.read();
+        console.log('[SSE] chunk received. done:', done, 'bytes:', value?.length);
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const payload = JSON.parse(line.slice(6));
+              if (!payload) continue;
+              
+              // Forward message details to Swarms State Manager
+              const swarmStore = useSwarmStore.getState();
+              
+              if (payload.type === 'SWARM_STARTED') {
+                swarmStore.setSwarmStatus('running');
+              } else if (payload.type === 'SWARM_COMPLETED') {
+                swarmStore.setSwarmStatus('completed');
+                swarmStore.setFinalOutput((payload.data as any)?.output || null);
+              } else if (payload.type === 'TASK_STARTED') {
+                const taskData = payload.data as any;
+                swarmStore.addTask({
+                  id: taskData.task_id,
+                  agent: taskData.agent,
+                  thought: 'Task initialized...',
+                  action: '',
+                  observation: '',
+                  status: 'running'
+                });
+              } else if (payload.type === 'TASK_COMPLETED') {
+                const taskData = payload.data as any;
+                swarmStore.updateTask(taskData.task_id, {
+                  status: 'completed',
+                  observation: taskData.output
+                });
+              } else if (payload.type === 'AGENT_THOUGHT') {
+                const tData = payload.data as any;
+                swarmStore.updateTask(tData.task_id, {
+                  thought: tData.thought,
+                  action: tData.action
+                });
+              }
+            } catch (err) {
+              console.error('Error parsing SSE line', err);
+            }
+          }
+        }
       }
-    };
-    
-    ws.onclose = () => {
-      set({ isConnected: false, socket: null });
-    };
-    
-    set({ socket: ws });
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('[SSE] Fetch error:', err);
+      }
+    } finally {
+      set({ isConnected: false, abortController: null });
+    }
   },
   
   disconnect: () => {
-    const ws = get().socket;
-    if (ws) {
-      ws.close();
+    const ac = get().abortController;
+    if (ac) {
+      ac.abort();
     }
-    set({ socket: null, isConnected: false });
+    set({ isConnected: false, abortController: null });
   }
 }));
-
-function jsonParseSafely(data: string) {
-  try {
-    return JSON.parse(data);
-  } catch {
-    return null;
-  }
-}

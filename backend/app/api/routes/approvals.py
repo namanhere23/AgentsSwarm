@@ -1,5 +1,6 @@
 # STUB-FILL — Implemented by: workstream/4a-approval-gate
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from redis.asyncio import Redis
 from backend.app.models.approval_models import (
     ApprovalRequest,
@@ -7,7 +8,6 @@ from backend.app.models.approval_models import (
     RejectResponse,
 )
 from backend.app.core.dependencies import get_current_user, get_db_client
-from backend.app.core.supabase_client import get_supabase_client
 from backend.app.core.event_bus import EventBus
 from backend.app.services.approval_gate import approval_gate
 from backend.app.core.config import settings
@@ -29,8 +29,8 @@ async def list_approvals(
     user_id: str = Depends(get_current_user),
     db=Depends(get_db_client),
 ):
-    response = (
-        db.table("approval_requests")
+    response = await run_in_threadpool(
+        lambda: db.table("approval_requests")
         .select("*")
         .eq("user_id", user_id)
         .eq("status", status)
@@ -48,8 +48,8 @@ async def approve_action(
 ):
 
     # 1. Verify existence
-    response = (
-        db.table("approval_requests")
+    response = await run_in_threadpool(
+        lambda: db.table("approval_requests")
         .select("*")
         .eq("id", id)
         .eq("user_id", user_id)
@@ -94,8 +94,8 @@ async def reject_action(
     redis_client: Redis = Depends(get_redis),
 ):
 
-    response = (
-        db.table("approval_requests")
+    response = await run_in_threadpool(
+        lambda: db.table("approval_requests")
         .select("*")
         .eq("id", id)
         .eq("user_id", user_id)

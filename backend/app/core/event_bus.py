@@ -35,29 +35,33 @@ class EventBus:
     async def consume(
         self, stream: str, group: str, consumer: str
     ) -> AsyncGenerator[dict, None]:
-        """Reads stream items via XREADGROUP or blocks on local Queue."""
-        if self.redis_available:
-            try:
-                # Ensure group exists
-                try:
-                    await self.redis.xgroup_create(stream, group, mkstream=True)
-                except Exception:
-                    pass  # Group already exists
-
+        """Reads stream items via XREADGROUP. Retries continuously on failure to ensure workers don't disconnect."""
+        if not self.redis_available:
+            # Fallback to in-memory queue only if Redis wasn't configured at startup
+            if stream in self.fallbacks:
                 while True:
-                    messages = await self.redis.xreadgroup(
-                        group, consumer, {stream: ">"}, count=1, block=1000
-                    )
-                    for stream_name, msg_list in messages:
-                        for msg_id, payload in msg_list:
-                            data = json.loads(payload[b"data"])
-                            data["_msg_id"] = msg_id.decode()
-                            yield data
-            except Exception as e:
-                logger.error(f"Redis consumer failed: {str(e)}")
+                    data = await self.fallbacks[stream].get()
+                    yield data
+            return
 
-        # Queue fallback
-        if stream in self.fallbacks:
-            while True:
-                data = await self.fallbacks[stream].get()
-                yield data
+        # Ensure group exists
+        try:
+            await self.redis.xgroup_create(stream, group, mkstream=True)
+        except Exception:
+            pass  # Group already exists
+
+        while True:
+            try:
+                messages = await self.redis.xreadgroup(
+                    group, consumer, {stream: ">"}, count=1, block=1000
+                )
+                for stream_name, msg_list in messages:
+                    for msg_id, payload in msg_list:
+                        data = json.loads(payload[b"data"])
+                        data["_msg_id"] = msg_id.decode()
+                        yield data
+            except Exception as e:
+                # If Redis connection drops, log the error and wait before retrying.
+                # NEVER break the loop, otherwise the worker becomes permanently deaf.
+                logger.error(f"Redis consumer connection error: {str(e)}. Retrying in 5 seconds...")
+                await asyncio.sleep(5)

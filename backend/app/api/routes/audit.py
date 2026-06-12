@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from backend.app.core.dependencies import get_current_user, get_db_client
+from fastapi.concurrency import run_in_threadpool
 from backend.app.services.approval_gate import approval_gate
 
 router = APIRouter(prefix="/audit", tags=["audit"])
@@ -20,8 +21,8 @@ async def get_audit_logs(
     if tool_name:
         query = query.eq("tool_name", tool_name)
 
-    response = (
-        query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+    response = await run_in_threadpool(
+        lambda: query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
     )
     return {"data": response.data, "page": page, "limit": limit}
 
@@ -35,7 +36,9 @@ async def rollback_audit_action(
     """Submits compiled inverse action payloads to Approval Gates."""
 
     # 1. Fetch rollback action
-    response = db.table("rollback_actions").select("*").eq("audit_log_id", id).execute()
+    response = await run_in_threadpool(
+        lambda: db.table("rollback_actions").select("*").eq("audit_log_id", id).execute()
+    )
     if not response.data:
         raise HTTPException(
             status_code=404, detail="Rollback mapping not registered for this action."
@@ -45,7 +48,9 @@ async def rollback_audit_action(
     inverse_payload = rollback_record["inverse_payload"]
 
     # Fetch audit tool info
-    audit_res = db.table("audit_log").select("tool_name").eq("id", id).execute()
+    audit_res = await run_in_threadpool(
+        lambda: db.table("audit_log").select("tool_name").eq("id", id).execute()
+    )
     tool_name = audit_res.data[0]["tool_name"] if audit_res.data else "HttpActionTool"
 
     # 2. Submit to approval gate

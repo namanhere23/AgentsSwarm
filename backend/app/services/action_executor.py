@@ -1,5 +1,6 @@
 # STUB-FILL — Implemented by: workstream/4b-audit-executor
 from typing import Dict, Any
+from fastapi.concurrency import run_in_threadpool
 from backend.app.memory.repository import SupabaseRepository
 
 
@@ -22,10 +23,13 @@ class ActionExecutor:
         duration_ms: int,
     ) -> Dict[str, Any]:
         """Writes immutable log audit entry to Postgres, marking request as executed."""
-        # 1. Update approval request state status
-        await self.db.table("approval_requests").update({"status": "executed"}).eq(
-            "id", approval_request_id
-        ).execute()
+        # 1. Update approval request state status (sync call → threadpool)
+        await run_in_threadpool(
+            lambda: self.db.table("approval_requests")
+            .update({"status": "executed"})
+            .eq("id", approval_request_id)
+            .execute()
+        )
 
         # 2. Write to immutable log structure (INSERT-only)
         audit_data = {
@@ -46,6 +50,9 @@ class ActionExecutor:
         self, approval_request_id: str, error_message: str
     ) -> None:
         """Flags approval request status as failed."""
-        await self.db.table("approval_requests").update(
-            {"status": "failed", "rejection_reason": error_message}
-        ).eq("id", approval_request_id).execute()
+        await run_in_threadpool(
+            lambda: self.db.table("approval_requests")
+            .update({"status": "failed", "rejection_reason": error_message})
+            .eq("id", approval_request_id)
+            .execute()
+        )

@@ -30,5 +30,5 @@ class SwarmRunResponse(BaseModel):
 
 class VoiceIngestResponse(BaseModel):
     swarm_run_id: str | None = None
-    status: Literal["transcribing"]
+    status: Literal["transcribing", "queued"]
     message: str = "Audio queued for local transcription."

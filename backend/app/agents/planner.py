@@ -1,6 +1,7 @@
 # STUB-FILL — Implemented by: workstream/3a-crew-execution-engine
 from crewai import Agent
-from backend.app.services.llm_adapter import LLMAdapter
+from backend.app.core.llm_config import get_groq_llm
+
 
 
 def create_planner(tools: list) -> Agent:
@@ -10,6 +11,8 @@ def create_planner(tools: list) -> Agent:
         backstory="You are an expert research strategist. You combine retrieved knowledge with systematic thinking to produce detailed, actionable execution plans.",
         allow_delegation=False,
         tools=tools,
-        llm=LLMAdapter(model="gemini-1.5-flash", temperature=0.2, max_tokens=2048),
+        max_iter=5,
+        llm=get_groq_llm(),
         verbose=True,
     )
+

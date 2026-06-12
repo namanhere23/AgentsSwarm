@@ -15,9 +15,7 @@ Two-level fallback strategy:
 """
 import os
 import asyncio
-import logging
 from openai import AsyncOpenAI
-from backend.app.core.config import settings
 from backend.app.core.logging import get_logger
 from backend.app.core.circuit_breaker import (
     check_breaker,
@@ -67,7 +65,7 @@ PROVIDER_POOLS = [
     (
         "groq",
         "https://api.groq.com/openai/v1",
-        "llama-3.1-70b-versatile",
+        "llama-3.3-70b-versatile",
         _load_key_pool("GROQ_API_KEY"),
     ),
     (

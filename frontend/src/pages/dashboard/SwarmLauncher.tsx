@@ -79,7 +79,7 @@ export const SwarmLauncher: React.FC = () => {
     formData.append('audio', blob, 'recording.webm');
 
     try {
-      await api.post('/swarms/voice', formData, {
+      const res = await api.post('/swarms/voice', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const percent = progressEvent.total
@@ -89,7 +89,13 @@ export const SwarmLauncher: React.FC = () => {
         }
       });
       
-      setMessage('Audio uploaded successfully. Transcription queued. Once complete, you will see a new active swarm trace.');
+      const swarmId = res.data.swarm_run_id;
+      if (swarmId) {
+        setActiveSwarm(swarmId);
+        navigate(`/dashboard/trace/${swarmId}`);
+      } else {
+        setMessage('Audio uploaded successfully. Transcription queued.');
+      }
       setUploadProgress(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Voice upload failed.');
@@ -125,31 +131,35 @@ export const SwarmLauncher: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <div className="rounded-[12px] border border-dark-border bg-dark-card p-[32px] shadow-[rgba(0,55,112,0.08)_0_8px_24px,rgba(0,55,112,0.04)_0_2px_6px]">
-        <h2 className="text-[32px] font-light tracking-[-0.64px] text-canvas mb-6">Launch New Swarm Run</h2>
+      <div className="glass-panel p-[32px] relative overflow-hidden">
+        {/* Subtle background glow specific to this card */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -z-10 translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-magenta/10 rounded-full blur-[80px] -z-10 -translate-x-1/2 translate-y-1/2"></div>
+
+        <h2 className="text-[32px] font-light tracking-[-0.64px] text-ink mb-6">Launch New Swarm Run</h2>
         
         {error && (
-          <div className="mb-4 rounded-[8px] bg-accent-ruby/20 border border-accent-ruby p-3 text-[15px] text-canvas">
+          <div className="mb-4 rounded-[8px] bg-ruby/10 border border-ruby/30 p-3 text-[15px] text-ruby backdrop-blur-sm">
             {error}
           </div>
         )}
         
         {message && (
-          <div className="mb-4 rounded-[8px] bg-primary-soft/20 border border-primary p-3 text-[15px] text-primary">
+          <div className="mb-4 rounded-[8px] bg-primary-soft/10 border border-primary/30 p-3 text-[15px] text-primary backdrop-blur-sm">
             {message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           <div>
             <label className="block text-[15px] font-light text-ink-mute mb-2">Select Agent Swarm Crew:</label>
             <select
               value={selectedCrew}
               onChange={(e) => setSelectedCrew(e.target.value)}
-              className="w-full rounded-[6px] border border-hairline-input bg-canvas p-[8px_12px] text-ink focus:outline-none focus:border-primary"
+              className="text-input w-full appearance-none bg-canvas-soft/40 hover:bg-canvas-soft/60 cursor-pointer"
             >
               {crews.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id} className="bg-canvas text-ink">{c.name}</option>
               ))}
             </select>
           </div>
@@ -162,18 +172,22 @@ export const SwarmLauncher: React.FC = () => {
               placeholder="What goal should the agent crew accomplish?"
               maxLength={2000}
               rows={5}
-              className="w-full rounded-[6px] border border-hairline-input bg-canvas p-[8px_12px] text-ink focus:outline-none focus:border-primary placeholder:text-ink-mute resize-none text-[15px] font-light"
+              className="text-input w-full resize-none placeholder:text-ink-mute/50 bg-canvas-soft/40 hover:bg-canvas-soft/60"
             />
-            <div className="flex justify-between mt-1 text-[13px] text-ink-mute font-normal tabular-nums-money">
+            <div className="flex justify-between mt-2 text-[13px] text-ink-mute font-normal tabular-nums-money">
               <span>Limit execution actions where possible.</span>
               <span>{objective.length}/2000 characters</span>
             </div>
           </div>
 
           {/* Audio recording widgets */}
-          <div className="rounded-[8px] border border-hairline-input bg-canvas-soft p-[16px] flex items-center justify-between">
-            <div className="text-[14px] text-ink-mute font-light">
-              {recording ? 'Recording voice objective...' : 'Or use voice recognition triggers'}
+          <div className="rounded-[12px] border border-hairline-input bg-canvas-soft/30 p-[16px] flex items-center justify-between backdrop-blur-sm transition-all duration-300 hover:bg-canvas-soft/50 hover:border-primary/50">
+            <div className="text-[14px] text-ink font-light">
+              {recording ? (
+                <span className="text-ruby animate-pulse flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-ruby"></div> Recording voice objective...
+                </span>
+              ) : 'Or use voice recognition triggers'}
               {uploadProgress !== null && <div className="mt-1 font-normal text-primary">Uploading: {uploadProgress}%</div>}
             </div>
             
@@ -181,7 +195,7 @@ export const SwarmLauncher: React.FC = () => {
               <button
                 type="button"
                 onClick={stopRecording}
-                className="h-10 w-10 bg-ruby rounded-full flex items-center justify-center text-on-primary animate-pulse shadow-md"
+                className="h-10 w-10 bg-ruby/20 border border-ruby rounded-full flex items-center justify-center text-ruby animate-pulse shadow-[0_0_15px_rgba(225,29,72,0.4)]"
               >
                 ■
               </button>
@@ -190,9 +204,9 @@ export const SwarmLauncher: React.FC = () => {
                 type="button"
                 onClick={startRecording}
                 disabled={loading}
-                className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-on-primary hover:bg-primary-press shadow-md disabled:opacity-50"
+                className="h-10 w-10 bg-primary/20 border border-primary rounded-full flex items-center justify-center text-primary transition-all duration-300 hover:bg-primary hover:text-on-primary hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] disabled:opacity-50"
               >
-                🎙
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
               </button>
             )}
           </div>
@@ -200,9 +214,14 @@ export const SwarmLauncher: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !objective.trim()}
-            className="w-full rounded-full bg-primary p-[8px_16px] text-[16px] font-normal text-on-primary transition-all hover:bg-primary-press hover:shadow-lg disabled:opacity-50 active:scale-95 flex items-center justify-center"
+            className="w-full rounded-full bg-primary p-[12px_16px] text-[16px] font-medium tracking-wide text-on-primary transition-all duration-300 hover:bg-primary-soft hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] disabled:opacity-50 active:scale-[0.98] flex items-center justify-center"
           >
-            {loading ? 'Queueing swarm...' : 'Launch Swarm'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-on-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Queueing swarm...
+              </span>
+            ) : 'Launch Swarm'}
           </button>
         </form>
       </div>

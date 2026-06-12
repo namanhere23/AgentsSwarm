@@ -1,5 +1,8 @@
 # STUB-FILL — Implemented by: workstream/2c-crew-registry-ingestion
 import os
+import re
+import pathlib
+import subprocess
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from redis.asyncio import Redis
@@ -16,6 +19,28 @@ from backend.app.memory.repository import SupabaseRepository
 from backend.app.core.config import settings
 
 router = APIRouter(prefix="/swarms", tags=["swarms"])
+
+# UUID v4 pattern — used to validate run IDs before any file/DB ops
+_UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE)
+
+# Resolved workspace root (used for path-traversal guard)
+_WORKSPACE = pathlib.Path(settings.WORKSPACE_DIR).resolve()
+
+
+def _validate_run_id(run_id: str) -> None:
+    """Raise 400 if run_id is not a valid UUID (blocks path traversal & injection)."""
+    if not _UUID_RE.match(run_id):
+        raise HTTPException(status_code=400, detail="Invalid run ID format.")
+
+
+def _safe_workspace_path(run_id: str, ext: str) -> pathlib.Path:
+    """Return a resolved path guaranteed to be inside the workspace directory."""
+    _validate_run_id(run_id)
+    resolved = (_WORKSPACE / f"{run_id}{ext}").resolve()
+    if not str(resolved).startswith(str(_WORKSPACE)):
+        # Should never happen after UUID validation, but defence-in-depth
+        raise HTTPException(status_code=400, detail="Invalid path.")
+    return resolved
 
 
 # Event Bus and Rate limit redis connections helper
@@ -35,25 +60,27 @@ async def create_swarm(
     redis_client: Redis = Depends(get_redis),
 ):
     # 1. Verify Crew ID
+    if request.crew_id == "string" or not request.crew_id:
+        request.crew_id = "research-crew"
+
     crew_def = get_crew(request.crew_id)
     if not crew_def:
         raise HTTPException(status_code=404, detail="crew_id not registered")
 
-    # 2. Check Concurrent limit of 10 runs per user
+    # 2. Check Concurrent limit — atomic INCR-first to prevent race condition
+    # Two simultaneous requests could both read count=9 and both pass a GET-then-check.
+    # Instead: increment first, then check. Roll back if over limit.
     concurrent_key = f"concurrent_runs:{user_id}"
-    current_runs = await redis_client.get(concurrent_key)
-    if current_runs and int(current_runs) >= 10:
+    new_count = await redis_client.incr(concurrent_key)
+    if new_count > 10:
+        await redis_client.decr(concurrent_key)  # rollback
         raise HTTPException(
             status_code=429,
             detail="Concurrent run limit reached",
             headers={"Retry-After": "60"},
         )
 
-    # Extract the real Bearer token from the request to pass to Supabase RLS
-    auth_header = req.headers.get("Authorization", "")
-    token = auth_header.removeprefix("Bearer ").strip() or "dev_token"
-
-    db_client = get_supabase_client(token)
+    db_client = get_supabase_client()  # Service key — no JWT needed
     repo = SupabaseRepository()
 
     # 3. Create run record
@@ -67,17 +94,15 @@ async def create_swarm(
     run_record = await repo.insert_swarm_run(db_client, run_data)
     run_id = run_record.get("id")
 
-    # 4. Increment concurrent tracker
-    await redis_client.incr(concurrent_key)
-
-    # 5. Enqueue to event bus stream
+    # 4. Enqueue to event bus stream — NO JWT token in queue (VULN-3 fix)
+    # Workers use the service key via get_supabase_client(), user_id is enough.
     event_bus = EventBus(redis_client)
     await event_bus.publish(
         "swarm_queue",
         {
             "swarm_run_id": run_id,
             "user_id": user_id,
-            "token": token,
+            # token intentionally omitted — workers use service account
         },
     )
 
@@ -91,12 +116,17 @@ async def create_swarm(
 
 @router.get("/{id}", response_model=SwarmRunResponse)
 async def get_swarm_run(id: str, user_id: str = Depends(get_current_user)):
-    db_client = get_supabase_client("auth_token")
+    _validate_run_id(id)  # blocks non-UUID ids early
+    db_client = get_supabase_client()
     repo = SupabaseRepository()
 
     run = await repo.get_swarm_run(db_client, id)
     if not run:
         raise HTTPException(status_code=404, detail="Swarm run not found")
+
+    # VULN-1 fix: ownership check — users can only read their own runs
+    if run.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     return SwarmRunResponse(
         swarm_run_id=run["id"],
@@ -115,38 +145,39 @@ async def get_swarm_run(id: str, user_id: str = Depends(get_current_user)):
 async def get_swarm_report(
     id: str, format: str = "markdown", user_id: str = Depends(get_current_user)
 ):
-    file_path = f"/app/workspace/{id}.md"
-    if not os.path.exists(file_path):
+    # VULN-2 fix: UUID validation + path traversal guard
+    file_path = _safe_workspace_path(id, ".md")
+
+    # VULN-1 fix: ownership check before serving the file
+    db_client = get_supabase_client()
+    repo = SupabaseRepository()
+    run = await repo.get_swarm_run(db_client, id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if run.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="Report not found")
 
     if format == "pdf":
-        import subprocess
-
-        pdf_path = f"/app/workspace/{id}.pdf"
+        pdf_path = _safe_workspace_path(id, ".pdf")
         try:
             subprocess.run(
-                [
-                    "pandoc",
-                    "--from",
-                    "markdown",
-                    "--to",
-                    "pdf",
-                    file_path,
-                    "-o",
-                    pdf_path,
-                ],
+                ["pandoc", "--from", "markdown", "--to", "pdf", str(file_path), "-o", str(pdf_path)],
                 check=True,
+                capture_output=True,
+                timeout=30,
             )
             return FileResponse(
-                pdf_path, media_type="application/pdf", filename=f"report_{id}.pdf"
+                str(pdf_path), media_type="application/pdf", filename=f"report_{id}.pdf"
             )
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"PDF generation failed: {str(e)}"
-            )
+        except Exception:
+            # Don't leak internal error details to client
+            raise HTTPException(status_code=500, detail="PDF generation failed.")
 
     return FileResponse(
-        file_path, media_type="text/markdown", filename=f"report_{id}.md"
+        str(file_path), media_type="text/markdown", filename=f"report_{id}.md"
     )
 
 
@@ -156,16 +187,22 @@ async def resume_swarm_run(
     user_id: str = Depends(get_current_user),
     redis_client: Redis = Depends(get_redis),
 ):
-    db_client = get_supabase_client("auth")
+    _validate_run_id(id)
+    db_client = get_supabase_client()
     repo = SupabaseRepository()
     run = await repo.get_swarm_run(db_client, id)
 
     if not run:
         raise HTTPException(status_code=404, detail="Swarm run not found")
+
+    # VULN-1 fix: ownership check — users can only resume their own runs
+    if run.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     if run["status"] != "failed":
         raise HTTPException(status_code=400, detail="Only failed runs can be resumed")
 
-    # Enqueue resume signal
+    # Enqueue resume signal — NO JWT token (VULN-3 fix)
     event_bus = EventBus(redis_client)
     await event_bus.publish(
         "swarm_queue",

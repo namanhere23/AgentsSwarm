@@ -1,4 +1,4 @@
-﻿/** @type {import('tailwindcss').Config} */
+/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -8,37 +8,37 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "var(--color-primary)",
-          deep: "var(--color-primary-deep)",
-          press: "var(--color-primary-press)",
-          soft: "var(--color-primary-soft)",
-          "bg-subdued-hover": "var(--color-primary-bg-subdued-hover)",
+          DEFAULT: "#3b82f6",
+          deep: "#2563eb",
+          press: "#1d4ed8",
+          soft: "#60a5fa",
+          "bg-subdued-hover": "rgba(59, 130, 246, 0.1)",
         },
         brand: {
           dark: {
-            900: "var(--color-brand-dark-900)",
+            900: "#020617",
           }
         },
         ink: {
-          DEFAULT: "var(--color-ink)",
-          secondary: "var(--color-ink-secondary)",
-          mute: "var(--color-ink-mute)",
-          mute2: "var(--color-ink-mute-2)",
+          DEFAULT: "#f8fafc",
+          secondary: "#cbd5e1",
+          mute: "#94a3b8",
+          mute2: "#64748b",
         },
-        "on-primary": "var(--color-on-primary)",
+        "on-primary": "#ffffff",
         canvas: {
-          DEFAULT: "var(--color-canvas)",
-          soft: "var(--color-canvas-soft)",
-          cream: "var(--color-canvas-cream)",
+          DEFAULT: "#09090b",
+          soft: "#18181b",
+          cream: "#27272a",
         },
         hairline: {
-          DEFAULT: "var(--color-hairline)",
-          input: "var(--color-hairline-input)",
+          DEFAULT: "rgba(255, 255, 255, 0.1)",
+          input: "rgba(255, 255, 255, 0.2)",
         },
-        ruby: "var(--color-ruby)",
-        magenta: "var(--color-magenta)",
-        lemon: "var(--color-lemon)",
-        "shadow-blue": "var(--color-shadow-blue)"
+        ruby: "#e11d48",
+        magenta: "#d946ef",
+        lemon: "#eab308",
+        "shadow-blue": "rgba(59, 130, 246, 0.3)"
       },
       spacing: {
         xxs: "var(--spacing-xxs)",

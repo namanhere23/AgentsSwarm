@@ -1,3 +1,12 @@
+import litellm
+import os
+# Drop unsupported params like cache_breakpoint (Groq doesn't support it)
+# Must be set before any CrewAI imports to take effect
+litellm.drop_params = True
+# Additional litellm configuration to prevent cache-related parameters
+os.environ["LITELLM_CACHE"] = "false"
+os.environ["LITELLM_DROP_PARAMS"] = "true"
+litellm.set_verbose = False
 from crewai import Crew, Process, Task
 from backend.app.core.logging import get_logger
 from backend.app.core.supabase_client import get_supabase_client
@@ -33,10 +42,11 @@ def get_checkpointer():
 
 
 async def execute_crew(
-    swarm_run_id: str, crew_def, objective: str, user_id: str, token: str
+    swarm_run_id: str, crew_def, objective: str, user_id: str
 ) -> None:
     """Instantiates the Crew topology and executes kickoff within the psycopg Saver thread context."""
-    db_client = get_supabase_client(token)
+    # Always use service account key — no JWT passed through queue
+    db_client = get_supabase_client()
     repo = SupabaseRepository()
 
     # 1. Update status
@@ -56,6 +66,15 @@ async def execute_crew(
 
     try:
         # Resolve tools lists safely mapping agents by their assumed roles
+        import os, litellm
+        real_key = os.getenv("GROQ_API_KEY_1") or os.getenv("GROQ_API_KEY")
+        if real_key and real_key != "dummy_key_for_testing":
+            os.environ["GROQ_API_KEY"] = real_key
+        # Tell LiteLLM to silently drop unsupported params (e.g. cache_breakpoint on Groq)
+        litellm.drop_params = True
+        # Additional litellm configuration to drop cache-related parameters
+        litellm.set_verbose = False
+
         planner_tools = []
         retriever_tools = []
         executor_tools = []
@@ -100,30 +119,61 @@ async def execute_crew(
         crew = Crew(
             agents=[orchestrator, planner, retriever, executor, validator],
             tasks=[task1, task2, task3],
-            process=Process.hierarchical,
-            manager_agent=orchestrator,
+            process=Process.sequential,
             verbose=True,
         )
 
-        # 5. Kickoff
-        result = crew.kickoff()
+        # 5. Emit WS task start events so UI populates the checklist
+        for agent_name, task_id in [
+            ("Orchestrator", "task_orchestrator"),
+            ("Planner", "task_planner"),
+            ("Executor", "task_executor"),
+        ]:
+            await event_bus.publish(
+                "ws_events",
+                {
+                    "type": "TASK_STARTED",
+                    "swarm_run_id": swarm_run_id,
+                    "data": {"task_id": task_id, "agent": agent_name},
+                },
+            )
 
-        # 6. Success - Save reports
+        # 6. Kickoff
+        result = await crew.kickoff_async()
+
+        # 6. Success - Save result + status to DB
         output_text = str(result)
+        logger.info(f"Crew finished. Saving completed status for run {swarm_run_id}")
         await repo.update_swarm_run_status(
             db_client, swarm_run_id, "completed", output_summary=output_text
         )
+        logger.info(f"DB status updated to 'completed' for run {swarm_run_id}")
 
         # Write Markdown Report file
         generate_report(swarm_run_id, result)
 
-        # Trigger Briefing enqueuing if high priority score
-        run_record = await repo.get_swarm_run(db_client, swarm_run_id)
-        p_score = run_record.get("priority_score", 0.0) if run_record else 0.0
-        if p_score >= 0.80:
-            briefing = BriefingService()
-            briefing.enqueue_briefing(swarm_run_id, output_text)
+        # Publish WebSocket task completions
+        for task_id in ["task_orchestrator", "task_planner"]:
+            await event_bus.publish(
+                "ws_events",
+                {
+                    "type": "TASK_COMPLETED",
+                    "swarm_run_id": swarm_run_id,
+                    "data": {"task_id": task_id, "output": "Task completed successfully."},
+                },
+            )
+        # Send actual output for the executor task
+        await event_bus.publish(
+            "ws_events",
+            {
+                "type": "TASK_COMPLETED",
+                "swarm_run_id": swarm_run_id,
+                "data": {"task_id": "task_executor", "output": output_text},
+            },
+        )
 
+        # Publish WebSocket event FIRST — briefing logic is optional and must not block this
+        logger.info(f"Publishing SWARM_COMPLETED event for run {swarm_run_id}")
         await event_bus.publish(
             "ws_events",
             {
@@ -132,10 +182,32 @@ async def execute_crew(
                 "data": {"output": output_text},
             },
         )
+        logger.info(f"SWARM_COMPLETED event published successfully for run {swarm_run_id}")
+
+        # Optional: Trigger Briefing enqueuing if high priority score
+        try:
+            run_record = await repo.get_swarm_run(db_client, swarm_run_id)
+            p_score = float(run_record.get("priority_score") or 0.0) if run_record else 0.0
+            if p_score >= 0.80:
+                briefing = BriefingService()
+                briefing.enqueue_briefing(swarm_run_id, output_text)
+        except Exception as briefing_err:
+            logger.warning(f"Briefing check skipped (non-fatal): {briefing_err}")
 
     except Exception as e:
         logger.error(f"Crew kickoff failed: {str(e)}")
-        await repo.update_swarm_run_status(db_client, swarm_run_id, "failed")
+        try:
+            await repo.update_swarm_run_status(db_client, swarm_run_id, "failed")
+            await event_bus.publish(
+                "ws_events",
+                {
+                    "type": "SWARM_FAILED",
+                    "swarm_run_id": swarm_run_id,
+                    "data": {"error": str(e)},
+                },
+            )
+        except Exception as cleanup_err:
+            logger.error(f"Failed to update failure status: {cleanup_err}")
 
     finally:
         # Decrement concurrency run counter

@@ -71,3 +71,4 @@ class SemanticQAScorer:
         """Return (passes_threshold, score) tuple."""
         score = self.score_alignment(code, intent)
         return score >= self.threshold, score
+
