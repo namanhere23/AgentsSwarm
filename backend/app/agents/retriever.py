@@ -1,16 +1,17 @@
 # STUB-FILL — Implemented by: workstream/3a-crew-execution-engine
 from crewai import Agent
+from backend.app.core.llm_config import get_groq_llm
 
 
 
 def create_retriever(tools: list) -> Agent:
     return Agent(
         role="Retriever",
-        goal="Fetch the most relevant real-time and archival information to support the current task objective.",
-        backstory="You are a world-class research analyst with access to the web and a long-term knowledge base. You surface only the most relevant, accurate information.",
+        goal="Fetch context from external APIs or local Vector DBs as requested by the Planner.",
+        backstory="You are a data retrieval expert capable of efficiently querying vector databases and APIs to provide precise context.",
         allow_delegation=False,
         tools=tools,
-        llm="groq/llama3-8b-8192",
+        max_iter=5,
+        llm=get_groq_llm(),
         verbose=True,
     )
-

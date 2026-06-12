@@ -45,30 +45,38 @@ class SupabaseRepository:
         return await run_in_threadpool(_sync_call)
 
     async def insert_memory_entity(self, client: Client, data: dict) -> dict:
-        response = client.table("memory_entities").insert(data).execute()
-        return response.data[0] if response.data else {}
+        def _sync_call():
+            response = client.table("memory_entities").insert(data).execute()
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
     async def search_memory_keyword(
         self, client: Client, user_id: str, query: str, limit: int = 50
     ) -> List[dict]:
         # Perform tsvector keyword rank query using supabase rpc or standard query
-        response = (
-            client.table("memory_events")
-            .select("*, content_tsv")
-            .eq("user_id", user_id)
-            .text_search("content_tsv", query)
-            .limit(limit)
-            .execute()
-        )
-        return response.data
+        def _sync_call():
+            response = (
+                client.table("memory_events")
+                .select("*, content_tsv")
+                .eq("user_id", user_id)
+                .text_search("content_tsv", query)
+                .limit(limit)
+                .execute()
+            )
+            return response.data
+        return await run_in_threadpool(_sync_call)
 
     async def insert_audit_log(self, client: Client, data: dict) -> dict:
-        response = client.table("audit_log").insert(data).execute()
-        return response.data[0] if response.data else {}
+        def _sync_call():
+            response = client.table("audit_log").insert(data).execute()
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
     async def insert_approval_request(self, client: Client, data: dict) -> dict:
-        response = client.table("approval_requests").insert(data).execute()
-        return response.data[0] if response.data else {}
+        def _sync_call():
+            response = client.table("approval_requests").insert(data).execute()
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
     async def update_approval_request(
         self,
@@ -80,13 +88,15 @@ class SupabaseRepository:
         update_data = {"status": status}
         if rejection_reason:
             update_data["rejection_reason"] = rejection_reason
-        response = (
-            client.table("approval_requests")
-            .update(update_data)
-            .eq("id", request_id)
-            .execute()
-        )
-        return response.data[0] if response.data else {}
+        def _sync_call():
+            response = (
+                client.table("approval_requests")
+                .update(update_data)
+                .eq("id", request_id)
+                .execute()
+            )
+            return response.data[0] if response.data else {}
+        return await run_in_threadpool(_sync_call)
 
 
 # Module-level convenience wrappers used by crew_executor

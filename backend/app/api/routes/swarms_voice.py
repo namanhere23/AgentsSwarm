@@ -93,7 +93,7 @@ async def upload_voice_objective(
             "user_id": user_id,
             "crew_id": "research-crew",
             "swarm_run_id": run_id,
-            "token": token
+            # token intentionally omitted — workers use service account
         },
     )
 

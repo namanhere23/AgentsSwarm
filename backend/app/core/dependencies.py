@@ -3,6 +3,7 @@ from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.app.core.security import verify_firebase_token
 from backend.app.core.supabase_client import get_supabase_client
+from fastapi.concurrency import run_in_threadpool
 
 security = HTTPBearer()
 
@@ -16,7 +17,9 @@ async def get_current_user(request: Request, auth: HTTPAuthorizationCredentials 
         # Auto-upsert dummy user to satisfy Foreign Key constraints
         try:
             db_client = get_supabase_client()
-            db_client.table("users").upsert({"id": uid}).execute()
+            await run_in_threadpool(
+                lambda: db_client.table("users").upsert({"id": uid}).execute()
+            )
         except Exception:
             # Safely ignore if user already exists or fails
             pass

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from croniter import croniter
 from backend.app.models.schedule_models import CreateScheduleRequest
 from backend.app.core.dependencies import get_current_user, get_db_client
@@ -24,8 +25,8 @@ async def create_schedule(
         raise HTTPException(status_code=400, detail="Invalid cron expression format.")
 
     # 3. Write Schedule settings to Postgres
-    response = (
-        db.table("scheduled_swarms")
+    response = await run_in_threadpool(
+        lambda: db.table("scheduled_swarms")
         .insert(
             {
                 "user_id": user_id,

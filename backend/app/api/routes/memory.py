@@ -1,5 +1,6 @@
-# STUB-FILL — Implemented by: workstream/5a-memory-explorer
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 from backend.app.models.memory_models import MemorySearchResponse, MemorySearchResult
 from backend.app.core.dependencies import get_current_user, get_db_client
@@ -12,6 +13,14 @@ router = APIRouter(prefix="/memory", tags=["memory"])
 # Load SentenceTransformer once at module load
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 vstore = VectorStore()
+
+
+class MemoryEventRequest(BaseModel):
+    """Validated input model for creating memory events — replaces raw dict."""
+    swarm_run_id: str = Field(..., min_length=36, max_length=36)
+    agent_role: str = Field(..., min_length=1, max_length=100)
+    task_description: str = Field(default="N/A", max_length=500)
+    content: str = Field(..., min_length=1, max_length=10000)
 
 
 @router.get("/search", response_model=MemorySearchResponse)
@@ -97,8 +106,9 @@ async def search_memory(
     # Fetch entity overlap list for all referenced ids
     if all_events:
         eids_filter = list(all_events.keys())
-        ent_response = (
-            db_client.table("memory_entities")
+        # Sync Supabase call → threadpool to avoid blocking async event loop
+        ent_response = await run_in_threadpool(
+            lambda: db_client.table("memory_entities")
             .select("memory_event_id, entity_text")
             .in_("memory_event_id", eids_filter)
             .execute()
@@ -166,7 +176,7 @@ async def search_memory(
 
 @router.post("/events", response_model=str)
 async def create_memory_event(
-    event: dict,
+    event: MemoryEventRequest,  # Pydantic model — validated, no KeyError risk
     user_id: str = Depends(get_current_user),
     db=Depends(get_db_client),
 ):
@@ -175,15 +185,15 @@ async def create_memory_event(
         db,
         {
             "user_id": user_id,
-            "swarm_run_id": event["swarm_run_id"],
-            "agent_role": event["agent_role"],
-            "task_description": event.get("task_description", "N/A"),
-            "content": event["content"],
+            "swarm_run_id": event.swarm_run_id,
+            "agent_role": event.agent_role,
+            "task_description": event.task_description,
+            "content": event.content,
         },
     )
 
     # Trigger entity extraction and vector upsert
-    entities = extract_entities(event["content"])
+    entities = extract_entities(event.content)
     for ent in entities:
         await repo.insert_memory_entity(
             db,
@@ -196,11 +206,11 @@ async def create_memory_event(
 
     vstore.upsert_memory(
         memory_event_id=record["id"],
-        content=event["content"],
+        content=event.content,
         metadata={
             "user_id": user_id,
-            "swarm_run_id": event["swarm_run_id"],
-            "agent_role": event["agent_role"],
+            "swarm_run_id": event.swarm_run_id,
+            "agent_role": event.agent_role,
             "created_at": record.get("created_at", ""),
         },
     )

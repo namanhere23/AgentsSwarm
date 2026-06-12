@@ -1,5 +1,6 @@
 # STUB-FILL — Implemented by: workstream/3a-crew-execution-engine
 from crewai import Agent
+from backend.app.core.llm_config import get_groq_llm
 
 
 
@@ -10,7 +11,8 @@ def create_planner(tools: list) -> Agent:
         backstory="You are an expert research strategist. You combine retrieved knowledge with systematic thinking to produce detailed, actionable execution plans.",
         allow_delegation=False,
         tools=tools,
-        llm="groq/llama3-8b-8192",
+        max_iter=5,
+        llm=get_groq_llm(),
         verbose=True,
     )
 

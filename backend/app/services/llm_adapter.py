@@ -65,7 +65,7 @@ PROVIDER_POOLS = [
     (
         "groq",
         "https://api.groq.com/openai/v1",
-        "llama-3.1-70b-versatile",
+        "llama-3.3-70b-versatile",
         _load_key_pool("GROQ_API_KEY"),
     ),
     (

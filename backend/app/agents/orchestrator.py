@@ -1,16 +1,18 @@
 # STUB-FILL — Implemented by: workstream/3a-crew-execution-engine
 from crewai import Agent
+from backend.app.core.llm_config import get_groq_llm
 
 
 
 def create_orchestrator() -> Agent:
     return Agent(
         role="Orchestrator",
-        goal="Decompose the user's natural language objective into an ordered TaskPlan and delegate tasks to the appropriate specialist agents.",
-        backstory="You are a senior AI project manager. You never execute tasks yourself. Your only job is to understand the goal, break it down, and assign work to your team.",
-        allow_delegation=True,
+        goal="Analyze the user's objective and produce a clear, structured task plan as your Final Answer. Do NOT ask questions. Do NOT delegate. Simply output the plan.",
+        backstory="You are a senior AI project manager. When given an objective, you immediately produce a structured breakdown of steps needed. You output your plan directly as your Final Answer without asking anyone anything.",
+        allow_delegation=False,
         tools=[],
-        llm="groq/llama3-8b-8192",
+        max_iter=3,
+        llm=get_groq_llm("llama-3.3-70b-versatile"),
         verbose=True,
     )
 

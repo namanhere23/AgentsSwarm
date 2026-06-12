@@ -17,7 +17,7 @@ export const AgentTraceCard: React.FC<Props> = ({ task }) => {
       >
         <div className="flex items-center gap-3">
           <span className={`h-2 w-2 rounded-full ${task.status === 'running' ? 'bg-accent-lemon animate-pulse' : 'bg-emerald-500'}`} />
-          <h3 className="text-[18px] font-light text-canvas tracking-tight">{task.agent}</h3>
+          <h3 className="text-[18px] font-light text-ink tracking-tight">{task.agent}</h3>
         </div>
         <span className="text-[11px] text-ink-mute font-normal uppercase tracking-wider">{task.status}</span>
       </div>
@@ -27,7 +27,7 @@ export const AgentTraceCard: React.FC<Props> = ({ task }) => {
           {task.thought && (
             <div>
               <h4 className="text-[10px] font-normal text-primary-soft uppercase tracking-[0.1px] mb-1">Thought:</h4>
-              <p className="text-canvas leading-relaxed font-light">{task.thought}</p>
+              <p className="text-ink-secondary leading-relaxed font-light whitespace-pre-wrap">{task.thought}</p>
             </div>
           )}
           {task.action && (
@@ -41,7 +41,7 @@ export const AgentTraceCard: React.FC<Props> = ({ task }) => {
           {task.observation && (
             <div>
               <h4 className="text-[10px] font-normal text-emerald-400 uppercase tracking-[0.1px] mb-1">Observation:</h4>
-              <p className="text-canvas leading-relaxed font-light">{task.observation}</p>
+              <p className="text-ink-secondary leading-relaxed font-light whitespace-pre-wrap font-mono text-[13px]">{task.observation}</p>
             </div>
           )}
         </div>

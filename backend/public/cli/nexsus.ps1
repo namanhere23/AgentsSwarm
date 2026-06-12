@@ -37,9 +37,11 @@ if ($Command -eq "run") {
         "Content-Type"  = "application/json"
     }
     
+    $augmentedObjective = $Objective + "`n`n(CRITICAL INSTRUCTION: If you output code blocks for files, you MUST put the exact target filename as a comment on the VERY FIRST line of each code block, e.g., `<!-- index.html -->`, `/* styles.css */`, or `# app.py`.)"
+    
     $body = @{
-        objective = $Objective
-        crew_id   = "default"
+        objective = $augmentedObjective
+        crew_id   = "research-crew"
     } | ConvertTo-Json
     
     try {
@@ -58,6 +60,42 @@ if ($Command -eq "run") {
             Write-Host "Status: $($statusRes.status) | Tasks Completed: $($statusRes.tasks_completed)"
             if ($statusRes.status -eq "completed" -or $statusRes.status -eq "failed") {
                 Write-Host "Final Output: $($statusRes.output_summary)" -ForegroundColor Green
+                
+                # Automatically extract and save code blocks to local files
+                $regex = '(?s)```(\w*)\r?\n(.*?)```'
+                $match = [regex]::Match($statusRes.output_summary, $regex)
+                $count = 1
+                $usedNames = @{}
+                while ($match.Success) {
+                    $lang = $match.Groups[1].Value.Trim()
+                    if (-not $lang) { $lang = "txt" }
+                    $code = $match.Groups[2].Value.Trim()
+                    
+                    $filename = "generated_$count.$lang"
+                    
+                    # Try to extract filename from the first line
+                    $firstLine = ($code -split '\r?\n')[0]
+                    if ($firstLine -match '([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)') {
+                        $filename = $matches[1]
+                    } else {
+                        if ($lang -eq "html") { $filename = "index.html" }
+                        elseif ($lang -eq "css") { $filename = "styles.css" }
+                        elseif ($lang -eq "js") { $filename = "script.js" }
+                        elseif ($lang -eq "py") { $filename = "main.py" }
+                    }
+                    
+                    if ($usedNames.ContainsKey($filename)) {
+                        $filename = "generated_$count.$lang"
+                    }
+                    $usedNames[$filename] = $true
+                    
+                    $code | Set-Content -Path $filename -Encoding UTF8
+                    Write-Host ""
+                    Write-Host "-> Successfully saved extracted code to: .\$filename" -ForegroundColor Cyan
+                    
+                    $count++
+                    $match = $match.NextMatch()
+                }
                 break
             }
             Start-Sleep -Seconds 5

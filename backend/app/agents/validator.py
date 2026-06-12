@@ -1,16 +1,17 @@
 # STUB-FILL — Implemented by: workstream/3a-crew-execution-engine
 from crewai import Agent
+from backend.app.core.llm_config import get_groq_llm
 
 
 
 def create_validator() -> Agent:
     return Agent(
         role="Validator",
-        goal="Critically evaluate all Executor outputs for logical consistency, schema correctness, factual accuracy, and risk flags before the crew finalizes.",
-        backstory="You are an expert quality assurance analyst. Your role is to find flaws, inconsistencies, and risks in proposed outputs. You are skeptical by nature.",
-        allow_delegation=True,
+        goal="Review execution results against the original objective and safety policies.",
+        backstory="You are an extremely strict auditor. You evaluate whether an action succeeded or failed, and ensure it respects all system rules.",
+        allow_delegation=False,
         tools=[],
-        llm="groq/llama3-8b-8192",
+        max_iter=5,
+        llm=get_groq_llm(),
         verbose=True,
     )
-
