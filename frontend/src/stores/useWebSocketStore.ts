@@ -17,7 +17,8 @@ export const useWebSocketStore = create<WebSocketState>((set, get) => ({
     if (get().isConnected) return;
     
     const effectiveToken = token || 'dev-token';
-    const sseUrl = `http://127.0.0.1:8000/sse/${swarmRunId}?token=${effectiveToken}`;
+    const sseBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const sseUrl = `${sseBaseUrl}/sse/${swarmRunId}?token=${effectiveToken}`;
     
     const abortController = new AbortController();
     set({ isConnected: true, abortController });
