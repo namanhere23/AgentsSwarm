@@ -44,8 +44,9 @@ async def get_health(redis_client: Redis = Depends(get_redis)):
     # 3. ChromaDB check
     try:
         async with httpx.AsyncClient() as client:
+            protocol = "https" if settings.CHROMA_PORT == 443 or "onrender.com" in settings.CHROMA_HOST else "http"
             res = await client.get(
-                f"http://{settings.CHROMA_HOST}:{settings.CHROMA_PORT}/api/v1/heartbeat"
+                f"{protocol}://{settings.CHROMA_HOST}:{settings.CHROMA_PORT}/api/v1/heartbeat"
             )
             components["chromadb"] = "up" if res.status_code == 200 else "down"
     except Exception:

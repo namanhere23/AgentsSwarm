@@ -5,11 +5,14 @@ from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunct
 
 class VectorStore:
     def __init__(self):
-        # Local persistent database path matched to Docker compose container structures
-        path = "/chroma/chroma"
-        if os.name == "nt":
-            path = os.path.join(os.getcwd(), "chroma_db")
-        self.client = chromadb.PersistentClient(path=path)
+        from backend.app.core.config import settings
+        
+        # Connect to standalone ChromaDB server (essential for multi-worker/Render deployment)
+        self.client = chromadb.HttpClient(
+            host=settings.CHROMA_HOST, 
+            port=settings.CHROMA_PORT,
+            ssl=("onrender.com" in settings.CHROMA_HOST or settings.CHROMA_PORT == 443)
+        )
         self.embedding_fn = SentenceTransformerEmbeddingFunction(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
