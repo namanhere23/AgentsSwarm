@@ -4,7 +4,7 @@ import { useSwarmStore } from './useSwarmStore';
 interface WebSocketState {
   isConnected: boolean;
   abortController: AbortController | null;
-  connect: (swarmRunId: string, token: string) => void;
+  connect: (swarmRunId: string, token: string | null) => void;
   disconnect: () => void;
 }
 
