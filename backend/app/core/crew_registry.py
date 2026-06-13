@@ -54,7 +54,7 @@ class CrewRegistry:
             def __init__(self, registry):
                 self.registry = registry
 
-            def on_any_event(self, event):
+            def on_modified(self, event):
                 if event.src_path.endswith(".yaml") or event.src_path.endswith(".yml"):
                     logger.info(
                         "Hot-reloading crews configuration due to file changes."
