@@ -133,7 +133,7 @@ const backendIp = env.BACKEND_IP || process.env.BACKEND_IP;
 if (!backendIp) {
   console.warn('[generate-cli] ⚠️  Warning: BACKEND_IP not set in environment. Proxy may fail.');
 }
-const backendDest = backendIp ? `http://${backendIp}/$1` : "http://localhost:8000/$1";
+const backendDest = backendIp ? `http://${backendIp}:8000/$1` : "http://localhost:8000/$1";
 
 const vercelJsonContent = `{
   "rewrites": [
