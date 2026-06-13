@@ -70,6 +70,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+frontend/vercel.json
 
 # Editor settings
 .vscode/
