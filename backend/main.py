@@ -99,6 +99,9 @@ app = FastAPI(
     description="Backend coordinator for the Agent Swarms multi-agent OS",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=None if settings.ENVIRONMENT == "production" else "/docs",
+    redoc_url=None if settings.ENVIRONMENT == "production" else "/redoc",
+    openapi_url=None if settings.ENVIRONMENT == "production" else "/openapi.json",
 )
 
 # 2. CORS Policy Implementation
