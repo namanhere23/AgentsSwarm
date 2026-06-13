@@ -11,7 +11,16 @@ to the User's Environment PATH registry.
 $ErrorActionPreference = "Stop"
 
 $nexsusDir = Join-Path $env:USERPROFILE ".nexsus\bin"
-$wrapperUrl = "http://127.0.0.1:8000/cli/nexsus.ps1"
+$serverUrl = [Environment]::GetEnvironmentVariable('NEXSUS_API_URL', 'User')
+if (-not $serverUrl) {
+    Write-Host "Nexsus Server URL not found." -ForegroundColor Yellow
+    $serverUrl = Read-Host "Please enter your Backend API URL"
+    $serverUrl = $serverUrl.TrimEnd('/')
+    [Environment]::SetEnvironmentVariable('NEXSUS_API_URL', $serverUrl, 'User')
+    Write-Host "Saved NEXSUS_API_URL to User Environment.`n" -ForegroundColor Green
+}
+
+$wrapperUrl = "$serverUrl/cli/nexsus.ps1"
 $wrapperPath = Join-Path $nexsusDir "nexsus.ps1"
 
 Write-Host "Installing Nexsus CLI globally..." -ForegroundColor Cyan

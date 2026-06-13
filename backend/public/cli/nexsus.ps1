@@ -14,7 +14,15 @@ param(
     [string]$Objective
 )
 
-$API_URL = "http://127.0.0.1:8000"
+$API_URL = [Environment]::GetEnvironmentVariable('NEXSUS_API_URL', 'User')
+if (-not $API_URL) { $API_URL = $env:NEXSUS_API_URL }
+
+if (-not $API_URL) {
+    Write-Host "Error: NEXSUS_API_URL environment variable is not set." -ForegroundColor Red
+    Write-Host "Please set it before running this CLI. Example:" -ForegroundColor Yellow
+    Write-Host "[Environment]::SetEnvironmentVariable('NEXSUS_API_URL', 'http://[IP_ADDRESS]', 'User')" -ForegroundColor White
+    exit 1
+}
 
 # Check for API key
 $apiKey = $env:NEXSUS_API_KEY
