@@ -1,0 +1,54 @@
+name: Deploy Backend to GCP VM
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-vm.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to GCP Compute Engine
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        # If your SSH key requires a passphrase, uncomment the line below and add it to secrets
+        # passphrase: ${{ secrets.VM_SSH_PASSPHRASE }}
+        # The port is usually 22, change if your SSH is on a custom port
+        port: 22
+        
+        # Replace '/path/to/AgentsSwarm' with the actual absolute path to your project on the VM.
+        # Replace the docker-compose command with your actual startup command if you aren't using docker-compose.
+        script: |
+          echo "Starting Deployment..."
+          cd ~/AgentsSwarm
+          
+          # Pull the latest code from the main branch
+          git pull origin main
+          
+          # Install any new dependencies if needed
+          venv/bin/pip install -r backend/requirements.txt
+          
+          # Kill old processes
+          echo "Stopping old servers..."
+          sudo pkill -f uvicorn || true
+          sudo pkill -f backend.workers || true
+          sudo pkill -f chroma || true
+          
+          # Start Chroma DB
+          echo "Starting Chroma DB..."
+          nohup venv/bin/chroma run --host localhost --port 8001 --path ./chroma_data > chroma.log 2>&1 &
+          
+          # Start Workers and Uvicorn inside a detached screen session so it persists after SSH disconnects
+          echo "Starting new API and Workers in background..."
+          screen -dmS swarm_api bash -c "sudo venv/bin/python -m backend.workers.whisper_consumer & sudo venv/bin/python -m backend.workers.tts_consumer & sudo venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 80"
+          
+          echo "Deployment Successful!"
