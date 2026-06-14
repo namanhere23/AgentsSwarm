@@ -150,7 +150,7 @@ function Run-Swarm {
             $i++
         }
     } catch {
-        Write-Host "`n  [!] Connection Error: $_" -ForegroundColor Red
+        Write-Host "`n  [!] Connection Error: The Nexsus Cloud is currently unreachable or the request failed." -ForegroundColor Red
     }
 }
 
@@ -158,14 +158,31 @@ $API_URL = [Environment]::GetEnvironmentVariable('NEXSUS_API_URL', 'User')
 if (-not $API_URL) { $API_URL = $env:NEXSUS_API_URL }
 
 if (-not $API_URL) {
-    Write-Host "Error: NEXSUS_API_URL environment variable is not set." -ForegroundColor Red
-    exit 1
+    $API_URL = "https://agents-swarm.vercel.app/api"
+    [Environment]::SetEnvironmentVariable('NEXSUS_API_URL', $API_URL, 'User')
+    $env:NEXSUS_API_URL = $API_URL
 }
 
-$apiKey = $env:NEXSUS_API_KEY
+$apiKey = [Environment]::GetEnvironmentVariable('NEXSUS_API_KEY', 'User')
+if (-not $apiKey) { $apiKey = $env:NEXSUS_API_KEY }
+
 if (-not $apiKey) {
-    Write-Host "Error: NEXSUS_API_KEY environment variable is not set." -ForegroundColor Red
-    exit 1
+    Show-WelcomeLogo
+    Write-Host "  [!] Nexsus API Key not found." -ForegroundColor Yellow
+    Write-Host "      Generate one securely at https://agents-swarm.vercel.app/" -ForegroundColor DarkGray
+    Write-Host ""
+    $newKey = Read-Host "  [>] Please paste your API Key (nx-sk-...)"
+    
+    if ($newKey -and $newKey.Trim() -ne "") {
+        [Environment]::SetEnvironmentVariable('NEXSUS_API_KEY', $newKey.Trim(), 'User')
+        $env:NEXSUS_API_KEY = $newKey.Trim()
+        $apiKey = $env:NEXSUS_API_KEY
+        Write-Host "`n  [OK] API Key saved securely! Welcome to Nexsus.`n" -ForegroundColor Green
+        Start-Sleep -Seconds 1
+    } else {
+        Write-Host "`n  [!] Cannot proceed without a valid API Key." -ForegroundColor Red
+        exit 1
+    }
 }
 
 if (-not $Command) {
