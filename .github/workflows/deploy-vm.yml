@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - pipeline
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-vm.yml'
@@ -26,8 +27,10 @@ jobs:
           echo "Starting Deployment..."
           cd ~/AgentsSwarm
           
-          # Pull the latest code from the main branch
-          git pull origin main
+          # Pull the latest code from the branch that triggered the workflow
+          git fetch origin
+          git checkout ${{ github.ref_name }}
+          git pull origin ${{ github.ref_name }}
           
           # Install any new dependencies if needed
           venv/bin/pip install -r backend/requirements.txt
@@ -38,13 +41,11 @@ jobs:
           screen -ls | awk '/\.swarm_api\t/ {print $1}' | xargs -r -I{} screen -S {} -X quit || true
           
           # Safely kill Chroma DB without killing the deployment script
-          for pid in $(pgrep -f "chroma run" || true); do
-            sudo kill -9 $pid || true
-          done
+          sudo pkill -f "[c]hroma run" || true
           
-          # Start Chroma DB
+          # Start Chroma DB (using quotes around "run" so it doesn't accidentally match the pkill regex)
           echo "Starting Chroma DB..."
-          nohup venv/bin/chroma run --host localhost --port 8001 --path ./chroma_data > chroma.log 2>&1 &
+          nohup venv/bin/chroma "run" --host localhost --port 8001 --path ./chroma_data > chroma.log 2>&1 &
           
           # Start Workers and Uvicorn inside a detached screen session
           echo "Starting new API and Workers in background..."
