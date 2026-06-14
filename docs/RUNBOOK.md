@@ -23,7 +23,7 @@ cd frontend && npm install && npm run dev
 ```
 
 ## 2. GCP Deployment Operations
-Nexus is deployed on **Google Cloud Platform (GCP)**. Operations and debugging in the cloud context require the following:
+Nexsus is deployed on **Google Cloud Platform (GCP)**. Operations and debugging in the cloud context require the following:
 - **Cloud Run / Container Registry**: The frontend and backend are containerized. New deployments trigger a build in Google Cloud Build which pushes images to the Artifact Registry.
 - **Environment Variables**: `.env` configurations are securely managed and injected via GCP Secrets Manager.
 - **Log Explorer**: View production logs in GCP Cloud Logging. Logs are structured as JSON, so you can easily query by `trace_id` or `level`.

@@ -75,7 +75,7 @@ export const DashboardLayout: React.FC = () => {
                   <img src="/logo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display='none'; }} />
                   <div>
                     <div className="text-[16px] font-bold tracking-[0.05em] text-gradient-brand leading-none">
-                      Nexus
+                      Nexsus
                     </div>
                     <div className="text-[9px] tracking-[0.2em] uppercase text-ink-5 mt-1 leading-none">
                       AI Command Center
@@ -135,7 +135,7 @@ export const DashboardLayout: React.FC = () => {
                     } ${
                       isActive
                         ? 'bg-primary/10 text-primary'
-                        : 'text-ink-4 hover:bg-white/[0.03] hover:text-ink-2'
+                        : 'text-ink-2 hover:bg-white/[0.03] hover:text-ink-2'
                     }`
                   }
                 >
@@ -180,7 +180,7 @@ export const DashboardLayout: React.FC = () => {
           <button
             onClick={handleSignOut}
             title={collapsed ? 'Sign Out' : undefined}
-            className={`w-full flex items-center text-[13px] text-ink-5 hover:text-ink-3 hover:bg-white/[0.03] rounded-xl transition-all duration-200 group ${
+            className={`w-full flex items-center text-[13px] text-ink-5 hover:text-ink-2 hover:bg-white/[0.03] rounded-xl transition-all duration-200 group ${
               collapsed ? 'justify-center py-3' : 'px-4 py-3 gap-3'
             }`}
           >
@@ -212,10 +212,10 @@ export const DashboardLayout: React.FC = () => {
         {/* Top Header Row */}
         <div className="flex-shrink-0 w-full flex justify-end px-8 pt-6 pb-2 z-50 relative">
           <div className="flex items-center gap-2 px-2 py-1.5 bg-[#0a0a0c] border border-white/5 rounded-2xl shadow-2xl">
-            <button className="p-2 text-ink-4 hover:text-ink transition-colors">
+            <button className="p-2 text-ink-2 hover:text-ink transition-colors">
               <Bell size={18} />
             </button>
-            <button className="p-2 text-ink-4 hover:text-ink transition-colors">
+            <button className="p-2 text-ink-2 hover:text-ink transition-colors">
               <Settings size={18} />
             </button>
             <div className="w-8 h-8 rounded-full border border-white/10 overflow-hidden ml-2 bg-canvas">

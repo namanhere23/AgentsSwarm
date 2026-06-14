@@ -1,7 +1,7 @@
 # System Architecture Specification (docs/ARCHITECTURE.md)
 
 ## 1. Component Topology
-The **Nexus** application is structured as a self-hosted monorepo divided into:
+The **Nexsus** application is structured as a self-hosted monorepo divided into:
 - **React Frontend (Vite):** A dark-themed, highly animated SPA dashboard built with React, Tailwind CSS, Framer Motion, and Zustand for state management.
 - **FastAPI Web API Gateway:** Routes HTTP requests, validates Firebase auth tokens, manages Server-Sent Events (SSE) streams for live updates, and publishes jobs to the Redis queue.
 - **CrewAI Worker Process:** Consumes runs from the Redis queue, instantiates agent roles, executes tasks, and triggers the Human-in-the-Loop approval gate.
@@ -31,7 +31,7 @@ Collaboration follows a hierarchical manager-worker architecture:
 ```
 
 ## 3. Deployment Topology (GCP)
-Nexus is container-native and designed for Google Cloud Platform:
+Nexsus is container-native and designed for Google Cloud Platform:
 - **Containers:** The backend and frontend are wrapped in portable Docker images.
 - **Cloud Run / Compute:** The stateless API Gateway runs securely on GCP, handling horizontal scaling as demand increases.
 - **Decoupled State:** Redis and Postgres are hosted independently (e.g., MemoryStore and Supabase), ensuring that spinning up or tearing down worker nodes does not result in data loss.

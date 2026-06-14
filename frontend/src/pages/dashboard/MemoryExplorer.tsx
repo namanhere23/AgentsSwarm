@@ -66,7 +66,7 @@ export const MemoryExplorer: React.FC = () => {
           <Brain size={26} className="text-primary" />
         </div>
         <h1 className="page-title mb-3">Memory Explorer</h1>
-        <p className="text-[15px] text-ink-4">
+        <p className="text-[15px] text-ink-2">
           Query semantic memories across all swarm runs using RAG hybrid search.
         </p>
       </motion.div>
@@ -79,11 +79,8 @@ export const MemoryExplorer: React.FC = () => {
         transition={{ delay: 0.15 }}
         className="max-w-2xl mx-auto mb-12 relative group"
       >
-        {/* Glow border */}
-        <div className="absolute -inset-px rounded-2xl bg-gradient-brand opacity-0 group-focus-within:opacity-30 transition-opacity duration-500 blur-sm pointer-events-none" />
-
-        <div className="relative flex items-center glass rounded-2xl border border-border group-focus-within:border-primary/40 transition-all duration-300 overflow-hidden">
-          <div className="pl-5 pr-3 text-ink-4 group-focus-within:text-primary transition-colors">
+        <div className="relative flex items-center bg-[#050505] border border-white/[0.08] rounded-xl focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/40 transition-all shadow-inner">
+          <div className="pl-5 pr-3 text-ink-2 group-focus-within:text-primary transition-colors">
             <Search size={20} />
           </div>
           <input
@@ -97,7 +94,7 @@ export const MemoryExplorer: React.FC = () => {
           <motion.button
             type="submit"
             disabled={loading || !query.trim()}
-            className="btn-primary m-2 px-6 py-3 rounded-xl text-[13px] font-bold tracking-wider uppercase disabled:opacity-40"
+            className="bg-primary hover:bg-primary/90 text-white m-2 px-6 py-2.5 rounded-lg text-[13px] font-bold tracking-wider uppercase disabled:opacity-40 shadow-glow-blue transition-all"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
           >
@@ -153,7 +150,7 @@ export const MemoryExplorer: React.FC = () => {
               className="glass rounded-2xl p-14 text-center"
             >
               <Brain size={28} className="text-ink-5 mx-auto mb-3" />
-              <p className="text-[15px] font-medium text-ink-3">No memories found for "{query}"</p>
+              <p className="text-[15px] font-medium text-ink-2">No memories found for "{query}"</p>
               <p className="text-[13px] text-ink-5 mt-1">Try a different search term.</p>
             </motion.div>
           ) : (
@@ -166,12 +163,12 @@ export const MemoryExplorer: React.FC = () => {
               className="space-y-4"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] text-ink-4 font-medium">
+                <span className="text-[12px] text-ink-2 font-medium">
                   {results.length} memory {results.length === 1 ? 'node' : 'nodes'} found
                 </span>
                 <button
                   onClick={() => { setResults([]); setSearched(false); setQuery(''); }}
-                  className="text-[12px] text-ink-4 hover:text-ink flex items-center gap-1 transition-colors"
+                  className="text-[12px] text-ink-2 hover:text-ink flex items-center gap-1 transition-colors"
                 >
                   <X size={12} /> Clear
                 </button>
@@ -203,7 +200,7 @@ export const MemoryExplorer: React.FC = () => {
                   </div>
 
                   {/* Content */}
-                  <p className="text-[14px] text-ink-3 leading-relaxed mb-5 group-hover:text-ink-2 transition-colors line-clamp-3">
+                  <p className="text-[14px] text-ink-2 leading-relaxed mb-5 group-hover:text-ink-2 transition-colors line-clamp-3">
                     {res.content}
                   </p>
 
@@ -214,7 +211,7 @@ export const MemoryExplorer: React.FC = () => {
                         <motion.button
                           key={idx}
                           onClick={() => handleInspectEntity(ent)}
-                          className="rounded-pill border border-border bg-canvas-1 px-3 py-1 text-[11px] font-medium text-ink-4 hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-all"
+                          className="rounded-pill border border-border bg-canvas-1 px-3 py-1 text-[11px] font-medium text-ink-2 hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-all"
                           whileHover={{ scale: 1.04 }}
                           whileTap={{ scale: 0.96 }}
                         >
@@ -250,19 +247,19 @@ export const MemoryExplorer: React.FC = () => {
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                 <div>
-                  <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Entity Graph</span>
+                  <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2">Entity Graph</span>
                   <h3 className="text-[15px] font-bold text-primary mt-0.5">#{selectedNode}</h3>
                 </div>
                 <motion.button
                   onClick={() => setNode(null)}
-                  className="p-2 rounded-xl text-ink-4 hover:text-ruby hover:bg-ruby/10 transition-all"
+                  className="p-2 rounded-xl text-ink-2 hover:text-ruby hover:bg-ruby/10 transition-all"
                   whileTap={{ scale: 0.9 }}
                 >
                   <X size={16} />
                 </motion.button>
               </div>
               <div className="p-6">
-                <p className="text-[13px] text-ink-4 mb-4">Linked agent nodes (2° separation)</p>
+                <p className="text-[13px] text-ink-2 mb-4">Linked agent nodes (2° separation)</p>
                 {graphPaths.length === 0 ? (
                   <div className="text-center py-8 text-[14px] text-ink-5">
                     No linked nodes found.
@@ -278,7 +275,7 @@ export const MemoryExplorer: React.FC = () => {
                         className="flex items-center gap-3 p-3 rounded-xl bg-canvas-1 border border-border"
                       >
                         <div className="w-2 h-2 rounded-full bg-primary shadow-glow-blue flex-shrink-0" />
-                        <span className="text-[13px] font-mono text-ink-3">
+                        <span className="text-[13px] font-mono text-ink-2">
                           Degree {i + 1}: <span className="text-ink">{path}</span>
                         </span>
                       </motion.div>
