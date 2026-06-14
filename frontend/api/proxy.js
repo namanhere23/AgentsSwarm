@@ -15,6 +15,15 @@ export default async function handler(req, res) {
   const targetPath = req.url.replace(/^\/api/, '');
   const targetUrl = `http://${cleanIp}${targetPath}`;
 
+  let bodyData;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    bodyData = Buffer.concat(chunks);
+  }
+
   try {
     const fetchResponse = await fetch(targetUrl, {
       method: req.method,
@@ -22,10 +31,7 @@ export default async function handler(req, res) {
         ...req.headers,
         host: backendIp, // override host to prevent Vercel edge loops
       },
-      // In Node.js serverless functions with bodyParser: false, req is a readable stream
-      body: req.method !== 'GET' && req.method !== 'HEAD' ? req : undefined,
-      // Node 18 fetch requires duplex: 'half' for streaming requests
-      duplex: req.method !== 'GET' && req.method !== 'HEAD' ? 'half' : undefined,
+      body: bodyData,
     });
 
     // Copy response headers back to client
