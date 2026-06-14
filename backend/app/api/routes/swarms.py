@@ -3,6 +3,7 @@ import os
 import re
 import pathlib
 import subprocess
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from redis.asyncio import Redis
@@ -115,12 +116,13 @@ async def create_swarm(
 
 
 @router.get("/{id}", response_model=SwarmRunResponse)
-async def get_swarm_run(id: str, user_id: str = Depends(get_current_user)):
-    _validate_run_id(id)  # blocks non-UUID ids early
+async def get_swarm_run(id: UUID, user_id: str = Depends(get_current_user)):
+    run_id = str(id)
+    _validate_run_id(run_id)  # blocks non-UUID ids early
     db_client = get_supabase_client()
     repo = SupabaseRepository()
 
-    run = await repo.get_swarm_run(db_client, id)
+    run = await repo.get_swarm_run(db_client, run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Swarm run not found")
 
@@ -143,15 +145,16 @@ async def get_swarm_run(id: str, user_id: str = Depends(get_current_user)):
 
 @router.get("/{id}/report")
 async def get_swarm_report(
-    id: str, format: str = "markdown", user_id: str = Depends(get_current_user)
+    id: UUID, format: str = "markdown", user_id: str = Depends(get_current_user)
 ):
+    run_id = str(id)
     # VULN-2 fix: UUID validation + path traversal guard
-    file_path = _safe_workspace_path(id, ".md")
+    file_path = _safe_workspace_path(run_id, ".md")
 
     # VULN-1 fix: ownership check before serving the file
     db_client = get_supabase_client()
     repo = SupabaseRepository()
-    run = await repo.get_swarm_run(db_client, id)
+    run = await repo.get_swarm_run(db_client, run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Report not found")
     if run.get("user_id") != user_id:
@@ -161,7 +164,7 @@ async def get_swarm_report(
         raise HTTPException(status_code=404, detail="Report not found")
 
     if format == "pdf":
-        pdf_path = _safe_workspace_path(id, ".pdf")
+        pdf_path = _safe_workspace_path(run_id, ".pdf")
         try:
             subprocess.run(
                 ["pandoc", "--from", "markdown", "--to", "pdf", str(file_path), "-o", str(pdf_path)],
@@ -170,27 +173,27 @@ async def get_swarm_report(
                 timeout=30,
             )
             return FileResponse(
-                str(pdf_path), media_type="application/pdf", filename=f"report_{id}.pdf"
+                str(pdf_path), media_type="application/pdf", filename=f"report_{run_id}.pdf"
             )
         except Exception:
             # Don't leak internal error details to client
             raise HTTPException(status_code=500, detail="PDF generation failed.")
 
     return FileResponse(
-        str(file_path), media_type="text/markdown", filename=f"report_{id}.md"
+        str(file_path), media_type="text/markdown", filename=f"report_{run_id}.md"
     )
-
 
 @router.get("/{id}/resume", status_code=202)
 async def resume_swarm_run(
-    id: str,
+    id: UUID,
     user_id: str = Depends(get_current_user),
     redis_client: Redis = Depends(get_redis),
 ):
-    _validate_run_id(id)
+    run_id = str(id)
+    _validate_run_id(run_id)
     db_client = get_supabase_client()
     repo = SupabaseRepository()
-    run = await repo.get_swarm_run(db_client, id)
+    run = await repo.get_swarm_run(db_client, run_id)
 
     if not run:
         raise HTTPException(status_code=404, detail="Swarm run not found")

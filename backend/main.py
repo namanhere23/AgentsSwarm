@@ -25,11 +25,11 @@ REQUIRED_SECRETS = [
     "GEMINI_API_KEY",
     "SERPER_API_KEY",
 ]
-for secret in REQUIRED_SECRETS:
-    val = os.getenv(secret)
+for env_var in REQUIRED_SECRETS:
+    val = os.getenv(env_var)
     if not val:
         print(
-            f"CRITICAL ERROR: Missing required environment variable: {secret}",
+            f"CRITICAL ERROR: Missing required environment variable: {env_var}",
             file=sys.stderr,
         )
         sys.exit(1)

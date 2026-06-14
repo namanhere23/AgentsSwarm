@@ -40,8 +40,10 @@ async def validate_crew_definition(
                 for err in e.errors()
             ]
             return {"valid": False, "errors": errs}
-        return {"valid": False, "errors": [{"field": "schema", "message": str(e)}]}
+        return {"valid": False, "errors": [{"field": "schema", "message": "An internal error occurred while validating the schema."}]}
 
+
+import os
 
 @router.post("/{id}")
 async def save_crew_definition(
@@ -57,8 +59,14 @@ async def save_crew_definition(
             status_code=400, detail=f"Validation failed: {val_res['errors']}"
         )
 
-    # 2. Write file
-    filepath = f"crews/{id}.yaml"
+    # 2. Write file (CodeQL py/path-injection fix)
+    base_path = os.path.abspath("crews")
+    safe_dir = os.path.join(base_path, "")
+    filepath = os.path.normpath(os.path.join(base_path, f"{id}.yaml"))
+    
+    if not filepath.startswith(safe_dir):
+        raise HTTPException(status_code=400, detail="Invalid crew ID format")
+
     try:
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(yaml_content)
@@ -67,4 +75,4 @@ async def save_crew_definition(
         _registry.load_crews()
         return {"status": "saved", "crew_id": id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"File save error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error during file save operation.")

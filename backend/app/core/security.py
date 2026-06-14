@@ -21,9 +21,9 @@ async def verify_firebase_token(token: str) -> str:
         except ValueError:
             # If not, generate a consistent UUID based on the dummy token string
             # This prevents Postgres 'invalid input syntax for type uuid' errors
-            m = hashlib.md5()
+            m = hashlib.sha256()
             m.update(token.encode("utf-8"))
-            return str(uuid.UUID(m.hexdigest()))
+            return str(uuid.UUID(bytes=m.digest()[:16]))
 
     try:
         decoded_token = auth.verify_id_token(token)
@@ -34,9 +34,9 @@ async def verify_firebase_token(token: str) -> str:
             )
         import uuid
         import hashlib
-        m = hashlib.md5()
+        m = hashlib.sha256()
         m.update(uid.encode("utf-8"))
-        return str(uuid.UUID(m.hexdigest()))
+        return str(uuid.UUID(bytes=m.digest()[:16]))
     except (auth.InvalidIdTokenError, auth.ExpiredIdTokenError) as e:
         raise HTTPException(
             status_code=401, detail=f"Invalid or expired token: {str(e)}"

@@ -8,18 +8,23 @@ from backend.app.core.config import settings
 router = APIRouter(prefix="/workspace", tags=["briefings"])
 
 
+import os
+
 @router.get("/{filename}")
 async def get_workspace_file(filename: str, user_id: str = Depends(get_current_user)):
     """Serves compiled WAV, Markdown, or PDF assets from workspace sandboxes."""
-    workspace_root = Path(settings.WORKSPACE_DIR).resolve()
-    target_path = (workspace_root / filename).resolve()
+    # CodeQL py/path-injection fix using os.path.normpath
+    workspace_root = os.path.abspath(settings.WORKSPACE_DIR)
+    safe_dir = os.path.join(workspace_root, "")
+    target_path_str = os.path.normpath(os.path.join(workspace_root, filename))
 
     # Path Traversal Check
-    if not str(target_path).startswith(str(workspace_root)):
+    if not target_path_str.startswith(safe_dir):
         raise HTTPException(
             status_code=403, detail="Access denied: path traversal rejected."
         )
 
+    target_path = Path(target_path_str)
     if not target_path.exists():
         raise HTTPException(status_code=404, detail="Requested asset file not found.")
 
@@ -32,4 +37,4 @@ async def get_workspace_file(filename: str, user_id: str = Depends(get_current_u
     }
     media_type = media_types.get(ext, "application/octet-stream")
 
-    return FileResponse(target_path, media_type=media_type, filename=filename)
+    return FileResponse(target_path, media_type=media_type, filename=target_path.name)
