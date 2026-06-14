@@ -1,6 +1,7 @@
-// NEW — Implemented by: workstream/5a-memory-explorer
 import React, { useState } from 'react';
 import api from '../../services/api';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { Search, Brain, X, Sparkles } from 'lucide-react';
 
 interface SearchResult {
   memory_event_id: string;
@@ -12,154 +13,283 @@ interface SearchResult {
   created_at: string;
 }
 
+const containerVariants: Variants = {
+  hidden:  {},
+  visible: { transition: { staggerChildren: 0.07 } },
+};
+const cardVariants: Variants = {
+  hidden:  { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { ease: "easeOut", duration: 0.5 } },
+};
+
 export const MemoryExplorer: React.FC = () => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [graphPaths, setGraphPaths] = useState<any[]>([]);
+  const [query, setQuery]         = useState('');
+  const [results, setResults]     = useState<SearchResult[]>([]);
+  const [loading, setLoading]     = useState(false);
+  const [selectedNode, setNode]   = useState<string | null>(null);
+  const [graphPaths, setPaths]    = useState<string[]>([]);
+  const [hasSearched, setSearched] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-
     setLoading(true);
+    setSearched(true);
     try {
       const res = await api.get<{ results: SearchResult[] }>(`/memory/search?q=${encodeURIComponent(query.trim())}`);
       setResults(res.data.results);
-    } catch (err) {
-      console.error('Failed to run semantic memory search', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setResults([]); } finally { setLoading(false); }
   };
 
-  const handleInspectEntity = async (entityText: string) => {
-    setSelectedNode(entityText);
+  const handleInspectEntity = async (entity: string) => {
+    setNode(entity);
     try {
-      // Mocked Graph rpc CTE queries return path lists
-      const res = await api.get(`/memory/search?q=${entityText}`); // Using search fallback for mocking path details
-      setGraphPaths(res.data.results.map((r: SearchResult) => r.agent_role));
-    } catch {
-      setGraphPaths([]);
-    }
+      const res = await api.get(`/memory/search?q=${encodeURIComponent(entity)}`);
+      setPaths(res.data.results.map((r: SearchResult) => r.agent_role));
+    } catch { setPaths([]); }
   };
+
+  const scoreColor = (s: number) =>
+    s >= 0.7 ? 'text-emerald bg-emerald/10 border-emerald/25' :
+    s >= 0.4 ? 'text-amber bg-amber/10 border-amber/25' :
+               'text-ruby bg-ruby/10 border-ruby/25';
 
   return (
-    <div className="max-w-5xl mx-auto py-12 font-sans relative">
-      {/* Background Glow */}
-      <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-gradient-to-br from-blue-600/10 via-fuchsia-600/10 to-transparent blur-[120px] rounded-full pointer-events-none -z-10"></div>
+    <div className="page-content">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-10 text-center max-w-2xl mx-auto"
+      >
+        <div className="w-14 h-14 rounded-2xl border border-primary/25 bg-primary/10 shadow-glow-blue flex items-center justify-center mx-auto mb-5">
+          <Brain size={26} className="text-primary" />
+        </div>
+        <h1 className="page-title mb-3">Memory Explorer</h1>
+        <p className="text-[15px] text-ink-4">
+          Query semantic memories across all swarm runs using RAG hybrid search.
+        </p>
+      </motion.div>
 
-      <div className="text-center mb-12">
-        <h2 className="text-[40px] font-bold tracking-tight text-white mb-4">Tri-Store Memory Explorer</h2>
-        <p className="text-gray-400">Query semantic events to pull long-term RAG context results across all swarms.</p>
-      </div>
+      {/* Search bar */}
+      <motion.form
+        onSubmit={handleSearch}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="max-w-2xl mx-auto mb-12 relative group"
+      >
+        {/* Glow border */}
+        <div className="absolute -inset-px rounded-2xl bg-gradient-brand opacity-0 group-focus-within:opacity-30 transition-opacity duration-500 blur-sm pointer-events-none" />
 
-      {/* Semantic search form bar - Massive & Centralized */}
-      <form onSubmit={handleSearch} className="max-w-3xl mx-auto mb-16 relative group">
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-fuchsia-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-        <div className="relative flex items-center bg-[#0f1115] rounded-2xl border border-white/10 shadow-2xl p-2">
-          <div className="pl-4 pr-2 text-blue-400">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <div className="relative flex items-center glass rounded-2xl border border-border group-focus-within:border-primary/40 transition-all duration-300 overflow-hidden">
+          <div className="pl-5 pr-3 text-ink-4 group-focus-within:text-primary transition-colors">
+            <Search size={20} />
           </div>
           <input
             autoFocus
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search hybrid memory graphs..."
-            className="flex-1 bg-transparent py-4 px-2 text-lg text-white placeholder-gray-500 focus:outline-none"
+            placeholder="Search memories, entities, agents…"
+            className="flex-1 bg-transparent py-4 px-2 text-[15px] text-ink placeholder-ink-5 focus:outline-none"
           />
-          <button
+          <motion.button
             type="submit"
             disabled={loading || !query.trim()}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
+            className="btn-primary m-2 px-6 py-3 rounded-xl text-[13px] font-bold tracking-wider uppercase disabled:opacity-40"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
           >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              'Search'
+            )}
+          </motion.button>
         </div>
-      </form>
+      </motion.form>
 
-      {/* Results grid */}
-      <div className="space-y-6 max-w-4xl mx-auto">
-        {results.length === 0 && !loading && query.trim() === '' ? (
-          <div className="text-center py-24">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-              <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            </div>
-            <p className="text-gray-500 text-lg">Enter a query to explore the neural memory graph.</p>
-          </div>
-        ) : results.length === 0 && !loading && query.trim() !== '' ? (
-          <div className="text-center py-16 bg-white/[0.02] rounded-2xl border border-white/5">
-            <p className="text-gray-400">No memory nodes found matching "{query}".</p>
-          </div>
-        ) : (
-          results.map((res) => (
-            <div key={res.memory_event_id} className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-6 shadow-xl hover:bg-white/[0.04] transition-all group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <span className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-400 uppercase tracking-widest">
-                    {res.agent_role}
-                  </span>
-                  <span className="text-xs text-gray-500 font-mono bg-black/40 px-2 py-1 rounded">Run: {res.swarm_run_id.slice(0, 8)}...</span>
+      {/* Results */}
+      <div className="max-w-3xl mx-auto">
+        <AnimatePresence mode="wait">
+          {!hasSearched ? (
+            /* Idle state */
+            <motion.div
+              key="idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-16"
+            >
+              <Sparkles size={32} className="text-ink-5 mx-auto mb-4" />
+              <p className="text-[15px] text-ink-5">
+                Enter a query to explore the neural memory graph.
+              </p>
+            </motion.div>
+          ) : loading ? (
+            /* Loading skeleton */
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="glass rounded-2xl p-6 mb-4 animate-pulse">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-6 w-20 rounded-full bg-white/10" />
+                    <div className="h-5 w-28 rounded bg-white/10" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 rounded bg-white/10" />
+                    <div className="h-4 w-4/5 rounded bg-white/10" />
+                  </div>
                 </div>
-                
-                <div className="flex gap-2 items-center">
-                  <span className="text-xs text-gray-500 uppercase tracking-widest">Decay Score:</span>
-                  <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 tabular-nums">
-                    {res.effective_score.toFixed(2)}
-                  </span>
-                </div>
+              ))}
+            </motion.div>
+          ) : results.length === 0 ? (
+            /* No results */
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="glass rounded-2xl p-14 text-center"
+            >
+              <Brain size={28} className="text-ink-5 mx-auto mb-3" />
+              <p className="text-[15px] font-medium text-ink-3">No memories found for "{query}"</p>
+              <p className="text-[13px] text-ink-5 mt-1">Try a different search term.</p>
+            </motion.div>
+          ) : (
+            /* Results grid */
+            <motion.div
+              key="results"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] text-ink-4 font-medium">
+                  {results.length} memory {results.length === 1 ? 'node' : 'nodes'} found
+                </span>
+                <button
+                  onClick={() => { setResults([]); setSearched(false); setQuery(''); }}
+                  className="text-[12px] text-ink-4 hover:text-ink flex items-center gap-1 transition-colors"
+                >
+                  <X size={12} /> Clear
+                </button>
               </div>
 
-              <p className="text-gray-300 text-[15px] leading-relaxed mb-6 group-hover:text-white transition-colors">{res.content}</p>
+              {results.map((res) => (
+                <motion.div
+                  key={res.memory_event_id}
+                  variants={cardVariants}
+                  className="glass rounded-2xl p-6 group hover:border-primary/25 transition-all duration-300"
+                  whileHover={{ y: -2 }}
+                >
+                  {/* Top row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="rounded-lg border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary uppercase tracking-wider">
+                        {res.agent_role}
+                      </span>
+                      <span className="text-[11px] font-mono text-ink-5 bg-canvas-1 px-2 py-1 rounded-lg border border-border">
+                        Run: {res.swarm_run_id.slice(0, 8)}…
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-[11px] uppercase tracking-widest text-ink-5">Score</span>
+                      <span className={`text-[12px] font-bold rounded-lg border px-2.5 py-1 tabular-nums ${scoreColor(res.effective_score)}`}>
+                        {res.effective_score.toFixed(3)}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Entity pills */}
-              <div className="flex flex-wrap gap-2">
-                {res.entities.map((ent, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleInspectEntity(ent)}
-                    className="rounded-full bg-black/40 border border-white/10 px-4 py-1.5 text-xs font-medium text-gray-400 hover:border-blue-500/50 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
-                  >
-                    #{ent}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
+                  {/* Content */}
+                  <p className="text-[14px] text-ink-3 leading-relaxed mb-5 group-hover:text-ink-2 transition-colors line-clamp-3">
+                    {res.content}
+                  </p>
+
+                  {/* Entity pills */}
+                  {res.entities.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {res.entities.map((ent, idx) => (
+                        <motion.button
+                          key={idx}
+                          onClick={() => handleInspectEntity(ent)}
+                          className="rounded-pill border border-border bg-canvas-1 px-3 py-1 text-[11px] font-medium text-ink-4 hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-all"
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
+                        >
+                          #{ent}
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Node Path Modal */}
-      {selectedNode && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 z-50">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0f1115] p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-            <div className="flex justify-between items-center pb-4 border-b border-white/10 mb-5">
-              <h3 className="text-lg font-bold text-white tracking-wide">Entity Graph: <span className="text-blue-400">{selectedNode}</span></h3>
-              <button onClick={() => setSelectedNode(null)} className="text-gray-500 hover:text-white transition-colors p-1 bg-white/5 rounded-md hover:bg-ruby/20 hover:text-ruby">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-400 mb-4">Recursive CTE Path Centrality Node connections:</p>
-            {graphPaths.length === 0 ? (
-              <div className="p-4 bg-white/5 rounded-xl border border-white/5 text-center">
-                <p className="text-sm text-gray-500">No linked nodes found within 2 degrees of separation.</p>
+      {/* Entity modal */}
+      <AnimatePresence>
+        {selectedNode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setNode(null); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-md glass-md rounded-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                <div>
+                  <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Entity Graph</span>
+                  <h3 className="text-[15px] font-bold text-primary mt-0.5">#{selectedNode}</h3>
+                </div>
+                <motion.button
+                  onClick={() => setNode(null)}
+                  className="p-2 rounded-xl text-ink-4 hover:text-ruby hover:bg-ruby/10 transition-all"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X size={16} />
+                </motion.button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {graphPaths.map((path, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-white/[0.02] border border-white/5 rounded-xl">
-                    <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
-                    <span className="text-sm text-gray-300 font-mono">Degree {idx + 1}: <span className="text-white">{path}</span></span>
+              <div className="p-6">
+                <p className="text-[13px] text-ink-4 mb-4">Linked agent nodes (2° separation)</p>
+                {graphPaths.length === 0 ? (
+                  <div className="text-center py-8 text-[14px] text-ink-5">
+                    No linked nodes found.
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-2">
+                    {graphPaths.map((path, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-canvas-1 border border-border"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-primary shadow-glow-blue flex-shrink-0" />
+                        <span className="text-[13px] font-mono text-ink-3">
+                          Degree {i + 1}: <span className="text-ink">{path}</span>
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

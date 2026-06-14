@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Zap } from 'lucide-react';
 
 interface ShortcutsModalProps {
   open: boolean;
@@ -6,73 +8,89 @@ interface ShortcutsModalProps {
 }
 
 const shortcuts = [
-  { key: 'Ctrl + B', label: 'Toggle Sidebar', desc: 'Expand or collapse the navigation sidebar' },
-  { key: '?', label: 'Show Shortcuts', desc: 'Display this keyboard shortcuts menu' },
-  { key: 'Esc', label: 'Close Modal', desc: 'Close open modals or sidebars' },
-  { key: 'Ctrl + L', label: 'Clear Logs', desc: 'Clear terminal or trace logs (where applicable)' }
+  { key: 'Ctrl + B',  label: 'Toggle Sidebar',  desc: 'Expand or collapse the navigation sidebar' },
+  { key: '?',         label: 'Show Shortcuts',   desc: 'Display this keyboard shortcuts menu'      },
+  { key: 'Esc',       label: 'Close Modal',      desc: 'Close any open modal or overlay'           },
+  { key: 'Ctrl + L',  label: 'Clear Logs',       desc: 'Clear terminal or trace logs (where applicable)' },
 ];
 
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ open, onClose }) => {
   useEffect(() => {
     if (!open) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      <div 
-        className="w-full max-w-md rounded-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-200"
-        style={{ backgroundColor: '#0f1115' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-5 border-b border-white/5 flex justify-between items-center relative bg-white/[0.02]">
-          {/* Accent Line */}
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-blue-500 via-fuchsia-500 to-rose-500 opacity-90"></div>
-          
-          <h2 className="text-lg font-bold text-white flex items-center tracking-wide">
-            <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Keyboard Shortcuts
-          </h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:text-white p-1.5 rounded-lg transition-all hover:bg-white/10"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="shortcuts-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}
+          onClick={onClose}
+        >
+          <motion.div
+            key="shortcuts-panel"
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.3 }}
+            className="w-full max-w-md glass-md rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+            {/* Top accent line */}
+            <div className="h-[2px] bg-gradient-brand w-full" />
 
-        <div className="p-3">
-          <ul className="space-y-1">
-            {shortcuts.map((s, i) => (
-              <li key={i} className="flex justify-between items-center px-4 py-3 hover:bg-white/[0.04] transition-colors rounded-lg group">
-                <div className="flex flex-col">
-                  <span className="text-[15px] font-medium text-gray-200 group-hover:text-white transition-colors">{s.label}</span>
-                  <span className="text-[13px] text-gray-500 mt-0.5">{s.desc}</span>
-                </div>
-                <div className="flex-shrink-0 ml-4">
-                  <kbd className="px-2.5 py-1.5 bg-black/40 border border-white/10 rounded-md text-[13px] font-mono text-blue-400 shadow-sm font-bold tracking-wider">
-                    {s.key}
-                  </kbd>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <div className="p-4 border-t border-white/5 text-center bg-white/[0.01]">
-          <p className="text-[13px] text-gray-500 font-medium">Pro tip: Use these to speed up your workflow.</p>
-        </div>
-      </div>
-    </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <Zap size={16} className="text-primary" />
+                <h2 className="text-[15px] font-bold text-ink tracking-wide">Keyboard Shortcuts</h2>
+              </div>
+              <motion.button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-ink-4 hover:text-ruby hover:bg-ruby/10 transition-all"
+                whileTap={{ scale: 0.9 }}
+              >
+                <X size={16} />
+              </motion.button>
+            </div>
+
+            {/* Shortcuts list */}
+            <div className="p-2">
+              <ul className="space-y-0.5">
+                {shortcuts.map((s, i) => (
+                  <motion.li
+                    key={i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-white/[0.04] transition-colors group"
+                  >
+                    <div>
+                      <p className="text-[14px] font-medium text-ink-2 group-hover:text-ink transition-colors">{s.label}</p>
+                      <p className="text-[12px] text-ink-5 mt-0.5">{s.desc}</p>
+                    </div>
+                    <kbd className="flex-shrink-0 ml-4 px-2.5 py-1.5 bg-canvas rounded-xl border border-border font-mono text-[12px] text-primary font-bold tracking-widest">
+                      {s.key}
+                    </kbd>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="px-5 py-3.5 border-t border-border bg-canvas-1 text-center">
+              <p className="text-[12px] text-ink-5">Pro tip: These shortcuts speed up your command center workflow.</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

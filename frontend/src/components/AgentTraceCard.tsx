@@ -1,51 +1,110 @@
-// NEW — Implemented by: workstream/3c-dashboard-trace
 import React, { useState } from 'react';
 import { TaskTrace } from '../types/swarm';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
-interface Props {
-  task: TaskTrace;
-}
+interface Props { task: TaskTrace; }
+
+const STATUS_CONFIG = {
+  completed: { border: '#10b981', dot: 'bg-emerald', badge: 'border-emerald/25 text-emerald bg-emerald/10', label: 'Completed' },
+  running:   { border: '#3b82f6', dot: 'bg-primary animate-pulse', badge: 'border-primary/25 text-primary bg-primary/10', label: 'Running'   },
+  pending:   { border: '#475569', dot: 'bg-ink-4', badge: 'border-border text-ink-4 bg-white/[0.03]', label: 'Pending'   },
+  failed:    { border: '#e11d48', dot: 'bg-ruby',   badge: 'border-ruby/25 text-ruby bg-ruby/10',   label: 'Failed'    },
+};
 
 export const AgentTraceCard: React.FC<Props> = ({ task }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [expanded, setExpanded] = useState(task.status === 'running' || task.status === 'completed');
+  const config = STATUS_CONFIG[task.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pending;
+  const hasContent = task.thought || task.action || task.observation;
 
   return (
-    <div className="w-full rounded-[12px] border border-dark-border bg-dark-card overflow-hidden shadow-[rgba(0,55,112,0.08)_0_8px_24px,rgba(0,55,112,0.04)_0_2px_6px]">
-      <div 
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-between p-6 cursor-pointer hover:bg-dark-border/40 transition-all"
+    <div
+      className="glass rounded-2xl overflow-hidden transition-all duration-300 hover:border-border-md"
+      style={{ borderLeft: `3px solid ${config.border}` }}
+    >
+      {/* Header row */}
+      <motion.button
+        onClick={() => hasContent && setExpanded((e) => !e)}
+        className={`w-full flex items-center justify-between px-5 py-4 text-left ${hasContent ? 'cursor-pointer hover:bg-white/[0.025]' : 'cursor-default'} transition-colors`}
+        whileTap={hasContent ? { scale: 0.99 } : undefined}
       >
         <div className="flex items-center gap-3">
-          <span className={`h-2 w-2 rounded-full ${task.status === 'running' ? 'bg-accent-lemon animate-pulse' : 'bg-emerald-500'}`} />
-          <h3 className="text-[18px] font-light text-ink tracking-tight">{task.agent}</h3>
-        </div>
-        <span className="text-[11px] text-ink-mute font-normal uppercase tracking-wider">{task.status}</span>
-      </div>
+          {/* Status dot */}
+          <span className="relative flex h-2 w-2 flex-shrink-0">
+            {task.status === 'running' && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
+            )}
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${config.dot}`} />
+          </span>
 
-      {!collapsed && (
-        <div className="border-t border-dark-border/55 p-6 space-y-4 bg-dark-bg/20 text-[15px]">
-          {task.thought && (
-            <div>
-              <h4 className="text-[10px] font-normal text-primary-soft uppercase tracking-[0.1px] mb-1">Thought:</h4>
-              <p className="text-ink-secondary leading-relaxed font-light whitespace-pre-wrap">{task.thought}</p>
-            </div>
-          )}
-          {task.action && (
-            <div>
-              <h4 className="text-[10px] font-normal text-accent-lemon uppercase tracking-[0.1px] mb-1">Action:</h4>
-              <pre className="bg-dark-bg p-3 rounded-[6px] overflow-x-auto border border-dark-border text-[13px] text-canvas-cream tabular-nums-money">
-                {task.action}
-              </pre>
-            </div>
-          )}
-          {task.observation && (
-            <div>
-              <h4 className="text-[10px] font-normal text-emerald-400 uppercase tracking-[0.1px] mb-1">Observation:</h4>
-              <p className="text-ink-secondary leading-relaxed font-light whitespace-pre-wrap font-mono text-[13px]">{task.observation}</p>
-            </div>
+          <div>
+            <span className="text-[14px] font-semibold text-ink">
+              {task.agent_role || task.agent}
+            </span>
+            {task.id && (
+              <span className="ml-2 text-[11px] font-mono text-ink-5">#{task.id.slice(0, 6)}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase ${config.badge}`}>
+            {config.label}
+          </span>
+          {hasContent && (
+            <span className="text-ink-5">
+              {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            </span>
           )}
         </div>
-      )}
+      </motion.button>
+
+      {/* Expandable content */}
+      <AnimatePresence initial={false}>
+        {expanded && hasContent && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-border px-5 py-5 space-y-4 bg-black/20">
+              {task.thought && (
+                <div>
+                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-2">
+                    Thought
+                  </div>
+                  <p className="text-[13px] text-ink-3 leading-relaxed whitespace-pre-wrap">
+                    {task.thought}
+                  </p>
+                </div>
+              )}
+              {task.action && (
+                <div>
+                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-amber mb-2">
+                    Action
+                  </div>
+                  <pre className="bg-canvas rounded-xl border border-border px-4 py-3 text-[12px] text-ink-2 font-mono overflow-x-auto leading-relaxed">
+                    {task.action}
+                  </pre>
+                </div>
+              )}
+              {task.observation && (
+                <div>
+                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald mb-2">
+                    Observation
+                  </div>
+                  <p className="text-[13px] text-ink-3 font-mono leading-relaxed whitespace-pre-wrap">
+                    {task.observation}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

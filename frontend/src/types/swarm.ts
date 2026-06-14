@@ -2,6 +2,7 @@
 export interface TaskTrace {
   id: string;
   agent: string;
+  agent_role?: string;
   thought: string;
   action: string;
   observation: string;

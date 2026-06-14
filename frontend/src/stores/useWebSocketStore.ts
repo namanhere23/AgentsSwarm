@@ -40,6 +40,7 @@ export const useWebSocketStore = create<WebSocketState>((set, get) => ({
       let buffer = '';
       
       console.log('[SSE] reader loop starting');
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         console.log('[SSE] chunk received. done:', done, 'bytes:', value?.length);

@@ -1,6 +1,7 @@
-// NEW — Implemented by: workstream/4c-approval-dashboard
 import React, { useCallback, useEffect, useState } from 'react';
 import api from '../../services/api';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { ClipboardList, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AuditEntry {
   id: string;
@@ -12,152 +13,218 @@ interface AuditEntry {
   created_at: string;
 }
 
+const containerVariants: Variants = {
+  hidden:  {},
+  visible: { transition: { staggerChildren: 0.04 } },
+};
+const rowVariants: Variants = {
+  hidden:  { opacity: 0, x: -12 },
+  visible: { opacity: 1, x: 0, transition: { ease: "easeOut" } },
+};
+
 export const AuditLogView: React.FC = () => {
-  const [logs, setLogs] = useState<AuditEntry[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [selectedLog, setSelectedLog] = useState<AuditEntry | null>(null);
+  const [logs, setLogs]             = useState<AuditEntry[]>([]);
+  const [page, setPage]             = useState(1);
+  const [loading, setLoading]       = useState(true);
+  const [selectedLog, setSelected]  = useState<AuditEntry | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<{ data: AuditEntry[] }>(`/audit/logs?page=${page}&limit=15`);
       setLogs(res.data.data);
-    } catch (err) {
-      console.error('Failed to load audit logs history', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* silent */ } finally { setLoading(false); }
   }, [page]);
 
-  useEffect(() => {
-    void fetchLogs();
-  }, [fetchLogs]);
+  useEffect(() => { void fetchLogs(); }, [fetchLogs]);
 
   return (
-    <div className="max-w-6xl mx-auto py-8 font-sans">
-      <div className="mb-8">
-        <h2 className="text-[32px] font-light tracking-[-0.64px] text-white">System Audit Trail</h2>
-        <p className="text-gray-400 mt-1 text-sm">Immutable ledger of all agent swarm operations and tool payloads.</p>
-      </div>
+    <div className="page-content">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <h1 className="page-title">System Audit Trail</h1>
+        <p className="text-[14px] text-ink-4 mt-2">
+          Immutable ledger of all agent operations and tool invocations.
+        </p>
+      </motion.div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#0f1115] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.4)]">
+      {/* Table card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="glass rounded-2xl overflow-hidden"
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-300">
-            <thead className="bg-[#1a1d24] text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-white/10">
-              <tr>
-                <th className="p-5 font-medium">Timestamp</th>
-                <th className="p-5 font-medium">Action Tool</th>
-                <th className="p-5 font-medium">Duration</th>
-                <th className="p-5 text-right font-medium">Inspection</th>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-border bg-canvas-1">
+                {['Timestamp', 'Tool / Action', 'Duration', 'Inspection'].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`px-5 py-4 text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4 ${i === 3 ? 'text-right' : ''}`}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="text-center p-12">
-                    <div className="flex items-center justify-center gap-3 text-blue-400">
-                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                      Querying secure audit ledger...
+                  <td colSpan={4} className="py-20 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 rounded-full border-2 border-border-md animate-spin" style={{ borderTopColor: '#3b82f6' }} />
+                      <span className="text-[14px] text-ink-4">Querying audit ledger…</span>
                     </div>
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-0">
-                    <div className="text-center py-24 bg-gradient-to-b from-transparent to-white/[0.02]">
-                      <div className="w-20 h-20 bg-[#1a1d24] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] rotate-3">
-                        <svg className="w-10 h-10 text-gray-600 -rotate-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  <td colSpan={4} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <ClipboardList size={32} className="text-ink-5" />
+                      <div>
+                        <p className="text-[15px] font-medium text-ink-3">No audit entries yet</p>
+                        <p className="text-[13px] text-ink-5 mt-1">Execute swarm runs to populate the trail.</p>
                       </div>
-                      <p className="text-white text-lg font-medium mb-1">No logs found on the audit trail.</p>
-                      <p className="text-gray-500 text-sm">Swarms have not executed any logged actions yet.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="p-5 text-xs font-mono text-gray-400 group-hover:text-gray-300">{new Date(log.created_at).toLocaleString()}</td>
-                    <td className="p-5 font-semibold text-white tracking-wide">{log.tool_name}</td>
-                    <td className="p-5 text-xs font-mono text-blue-400">{log.duration_ms ? `${log.duration_ms}ms` : 'N/A'}</td>
-                    <td className="p-5 text-right">
-                      <button
-                        onClick={() => setSelectedLog(log)}
-                        className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-xs font-bold tracking-widest text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all uppercase"
-                      >
-                        Inspect Payload
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                <motion.tbody
+                  key={page}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {logs.map((log) => (
+                    <motion.tr
+                      key={log.id}
+                      variants={rowVariants}
+                      className="hover:bg-white/[0.025] transition-colors group cursor-default"
+                    >
+                      <td className="px-5 py-4 text-[12px] font-mono text-ink-4 group-hover:text-ink-3 transition-colors whitespace-nowrap">
+                        {new Date(log.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-[13px] font-bold text-ink tracking-wide uppercase font-mono">
+                          {log.tool_name}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-[12px] font-mono text-primary tabular-nums">
+                          {log.duration_ms != null ? `${log.duration_ms}ms` : '—'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <motion.button
+                          onClick={() => setSelected(log)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-primary/25 bg-primary/10 px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase text-primary hover:bg-primary/20 hover:border-primary/40 transition-all"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          <Search size={11} />
+                          Inspect
+                        </motion.button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </motion.tbody>
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination footer */}
-        <div className="flex items-center justify-between p-4 bg-[#1a1d24] border-t border-white/10">
-          <button
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-t border-border bg-canvas-1">
+          <motion.button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-lg border border-white/10 bg-[#0f1115] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-white hover:border-white/30 transition-all disabled:opacity-30 disabled:hover:border-white/10"
+            className="btn-ghost flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-medium disabled:opacity-30"
+            whileTap={{ scale: 0.97 }}
           >
-            Previous
-          </button>
-          <span className="text-xs font-bold text-gray-500 tracking-widest uppercase">Page <span className="text-white">{page}</span></span>
-          <button
+            <ChevronLeft size={14} /> Previous
+          </motion.button>
+          <span className="text-[12px] text-ink-4 tracking-widest uppercase">
+            Page <span className="text-ink font-bold">{page}</span>
+          </span>
+          <motion.button
             onClick={() => setPage((p) => p + 1)}
             disabled={logs.length < 15}
-            className="rounded-lg border border-white/10 bg-[#0f1115] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-white hover:border-white/30 transition-all disabled:opacity-30 disabled:hover:border-white/10"
+            className="btn-ghost flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-medium disabled:opacity-30"
+            whileTap={{ scale: 0.97 }}
           >
-            Next
-          </button>
+            Next <ChevronRight size={14} />
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Inspect payload details sidebar sheet */}
-      {selectedLog && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 z-50">
-          <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f1115] p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[85vh]">
-            <div className="flex justify-between items-center pb-5 border-b border-white/10">
-              <h3 className="text-xl font-bold text-white uppercase tracking-wide">
-                <span className="text-blue-400">{selectedLog.tool_name}</span> Payload Details
-              </h3>
-              <button 
-                onClick={() => setSelectedLog(null)}
-                className="text-gray-500 hover:text-ruby transition-colors p-1.5 hover:bg-ruby/10 rounded-lg"
-              >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto space-y-6 py-6 text-sm">
-              <div>
-                <h4 className="font-bold text-gray-500 mb-3 uppercase tracking-widest text-xs flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Input Payload
-                </h4>
-                <div className="bg-black/50 p-5 rounded-xl border border-white/5 overflow-x-auto">
-                  <pre className="text-gray-300 font-mono text-sm leading-relaxed">
+      {/* Inspect Modal */}
+      <AnimatePresence>
+        {selectedLog && (
+          <motion.div
+            key="modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 10 }}
+              transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.35 }}
+              className="w-full max-w-2xl glass-md rounded-2xl flex flex-col max-h-[80vh] overflow-hidden"
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+                <div>
+                  <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Payload Details</span>
+                  <h3 className="text-[16px] font-bold text-primary font-mono mt-0.5">{selectedLog.tool_name}</h3>
+                </div>
+                <motion.button
+                  onClick={() => setSelected(null)}
+                  className="p-2 rounded-xl text-ink-4 hover:text-ruby hover:bg-ruby/10 transition-all"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X size={18} />
+                </motion.button>
+              </div>
+
+              {/* Modal body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Input Payload</span>
+                  </div>
+                  <pre className="bg-canvas rounded-xl border border-border p-4 text-[12px] font-mono text-ink-2 whitespace-pre-wrap overflow-x-auto leading-relaxed">
                     {JSON.stringify(selectedLog.input_payload, null, 2)}
                   </pre>
                 </div>
-              </div>
-              {selectedLog.output_payload && (
-                <div>
-                  <h4 className="font-bold text-gray-500 mb-3 uppercase tracking-widest text-xs flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Output Payload
-                  </h4>
-                  <div className="bg-black/50 p-5 rounded-xl border border-white/5 overflow-x-auto">
-                    <pre className="text-gray-300 font-mono text-sm leading-relaxed">
+                {selectedLog.output_payload && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald" />
+                      <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Output Payload</span>
+                    </div>
+                    <pre className="bg-canvas rounded-xl border border-border p-4 text-[12px] font-mono text-ink-2 whitespace-pre-wrap overflow-x-auto leading-relaxed">
                       {JSON.stringify(selectedLog.output_payload, null, 2)}
                     </pre>
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
