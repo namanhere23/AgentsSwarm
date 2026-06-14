@@ -1,36 +1,50 @@
 export const config = {
-  runtime: 'edge',
+  api: {
+    bodyParser: false,
+  },
 };
 
-export default async function handler(req) {
-  const url = new URL(req.url);
+export default async function handler(req, res) {
   const backendIp = process.env.BACKEND_IP;
   
   if (!backendIp) {
-    return new Response(JSON.stringify({ error: "Missing BACKEND_IP in Vercel environment variables" }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' }
-    });
+    return res.status(500).json({ error: "Missing BACKEND_IP" });
   }
 
-  // url.pathname will be something like "/api/crews"
-  // We want to forward it to "http://[IP_ADDRESS]/crews"
-  const targetPath = url.pathname.replace(/^\/api/, '');
-  const targetUrl = `http://${backendIp}.nip.io${targetPath}${url.search}`;
+  const targetPath = req.url.replace(/^\/api/, '');
+  const targetUrl = `http://${backendIp}${targetPath}`;
 
   try {
-    const response = await fetch(targetUrl, {
+    const fetchResponse = await fetch(targetUrl, {
       method: req.method,
-      headers: req.headers,
-      body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
-      redirect: 'manual',
+      headers: {
+        ...req.headers,
+        host: backendIp, // override host to prevent Vercel edge loops
+      },
+      // In Node.js serverless functions with bodyParser: false, req is a readable stream
+      body: req.method !== 'GET' && req.method !== 'HEAD' ? req : undefined,
+      // Node 18 fetch requires duplex: 'half' for streaming requests
+      duplex: req.method !== 'GET' && req.method !== 'HEAD' ? 'half' : undefined,
     });
 
-    return response;
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' }
+    // Copy response headers back to client
+    fetchResponse.headers.forEach((value, key) => {
+      res.setHeader(key, value);
     });
+    
+    res.status(fetchResponse.status);
+
+    // Stream the response back
+    if (fetchResponse.body) {
+      // fetchResponse.body is a ReadableStream. We can convert to Node stream or just use arrayBuffer
+      const arrayBuffer = await fetchResponse.arrayBuffer();
+      res.end(Buffer.from(arrayBuffer));
+    } else {
+      res.end();
+    }
+
+  } catch (error) {
+    console.error("Proxy error:", error);
+    res.status(502).json({ error: "Proxy internal error: " + error.message });
   }
 }
