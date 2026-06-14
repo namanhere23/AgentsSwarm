@@ -35,10 +35,15 @@ jobs:
           # Install any new dependencies if needed
           venv/bin/pip install -r backend/requirements.txt
           
+          # Define commands as split strings to prevent the SSH shell from matching pkill -f
+          U_CMD="uvi""corn"
+          W_CMD="backend.""workers"
+          
           # Kill old processes
           echo "Stopping old servers and clearing screen sessions..."
           sudo fuser -k 80/tcp || true
-          ps aux | grep "venv/bin/python -m backend.workers" | grep -v "grep\|bash" | awk '{print $2}' | sudo xargs -r kill -9 || true
+          sudo pkill -f "$U_CMD" || true
+          sudo pkill -f "$W_CMD" || true
           # Close all previous screen sessions
           screen -ls | awk '/\.swarm_api\t/ {print $1}' | xargs -r -I{} screen -S {} -X quit || true
           
@@ -51,6 +56,5 @@ jobs:
           
           # Start Workers and Uvicorn inside a detached screen session
           echo "Starting new API and Workers in background..."
-          screen -dmS swarm_api bash -c "sudo venv/bin/python -m backend.workers.whisper_consumer & sudo venv/bin/python -m backend.workers.tts_consumer & sudo venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 80"
-          
+          screen -dmS swarm_api bash -c "sudo venv/bin/python -m ${W_CMD}.whisper_consumer > whisper_worker.log 2>&1 & sudo venv/bin/python -m ${W_CMD}.tts_consumer > tts_worker.log 2>&1 & sudo venv/bin/python -m ${U_CMD} backend.main:app --host 0.0.0.0 --port 80 > api.log 2>&1; exec bash"       
           echo "Deployment Successful!"
