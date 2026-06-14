@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/cli/:file",
+      "destination": "/cli/:file"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/proxy"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

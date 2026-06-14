@@ -126,32 +126,4 @@ try {
   console.warn('[generate-cli] ⚠️  Could not copy nexsus.ps1 from backend — skipping');
 }
 
-// -----------------------------------------------------------------------
-// 3. Generate vercel.json dynamically to hide the Backend IP
-// -----------------------------------------------------------------------
-const backendIp = env.BACKEND_IP || process.env.BACKEND_IP;
-if (!backendIp) {
-  console.warn('[generate-cli] ⚠️  Warning: BACKEND_IP not set in environment. Proxy may fail.');
-}
-const backendDest = backendIp ? `http://${backendIp}:8000/$1` : "http://localhost:8000/$1";
 
-const vercelJsonContent = `{
-  "rewrites": [
-    {
-      "source": "/api/cli/:file",
-      "destination": "/cli/:file"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "${backendDest}"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
-`;
-
-writeFileSync(resolve(rootDir, 'vercel.json'), vercelJsonContent, 'utf-8');
-console.log('[generate-cli] ✅ Generated frontend/vercel.json with hidden proxy configuration');
