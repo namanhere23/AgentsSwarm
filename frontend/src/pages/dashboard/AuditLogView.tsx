@@ -47,7 +47,7 @@ export const AuditLogView: React.FC = () => {
         className="mb-8"
       >
         <h1 className="page-title">System Audit Trail</h1>
-        <p className="text-[14px] text-ink-4 mt-2">
+        <p className="text-[14px] text-ink-2 mt-2">
           Immutable ledger of all agent operations and tool invocations.
         </p>
       </motion.div>
@@ -66,7 +66,7 @@ export const AuditLogView: React.FC = () => {
                 {['Timestamp', 'Tool / Action', 'Duration', 'Inspection'].map((h, i) => (
                   <th
                     key={h}
-                    className={`px-5 py-4 text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4 ${i === 3 ? 'text-right' : ''}`}
+                    className={`px-5 py-4 text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2 ${i === 3 ? 'text-right' : ''}`}
                   >
                     {h}
                   </th>
@@ -79,7 +79,7 @@ export const AuditLogView: React.FC = () => {
                   <td colSpan={4} className="py-20 text-center">
                     <div className="flex items-center justify-center gap-3">
                       <div className="w-5 h-5 rounded-full border-2 border-border-md animate-spin" style={{ borderTopColor: '#3b82f6' }} />
-                      <span className="text-[14px] text-ink-4">Querying audit ledger…</span>
+                      <span className="text-[14px] text-ink-2">Querying audit ledger…</span>
                     </div>
                   </td>
                 </tr>
@@ -89,7 +89,7 @@ export const AuditLogView: React.FC = () => {
                     <div className="flex flex-col items-center gap-3">
                       <ClipboardList size={32} className="text-ink-5" />
                       <div>
-                        <p className="text-[15px] font-medium text-ink-3">No audit entries yet</p>
+                        <p className="text-[15px] font-medium text-ink-2">No audit entries yet</p>
                         <p className="text-[13px] text-ink-5 mt-1">Execute swarm runs to populate the trail.</p>
                       </div>
                     </div>
@@ -108,7 +108,7 @@ export const AuditLogView: React.FC = () => {
                       variants={rowVariants}
                       className="hover:bg-white/[0.025] transition-colors group cursor-default"
                     >
-                      <td className="px-5 py-4 text-[12px] font-mono text-ink-4 group-hover:text-ink-3 transition-colors whitespace-nowrap">
+                      <td className="px-5 py-4 text-[12px] font-mono text-ink-2 group-hover:text-ink-2 transition-colors whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString()}
                       </td>
                       <td className="px-5 py-4">
@@ -150,7 +150,7 @@ export const AuditLogView: React.FC = () => {
           >
             <ChevronLeft size={14} /> Previous
           </motion.button>
-          <span className="text-[12px] text-ink-4 tracking-widest uppercase">
+          <span className="text-[12px] text-ink-2 tracking-widest uppercase">
             Page <span className="text-ink font-bold">{page}</span>
           </span>
           <motion.button
@@ -186,12 +186,12 @@ export const AuditLogView: React.FC = () => {
               {/* Modal header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
                 <div>
-                  <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Payload Details</span>
+                  <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2">Payload Details</span>
                   <h3 className="text-[16px] font-bold text-primary font-mono mt-0.5">{selectedLog.tool_name}</h3>
                 </div>
                 <motion.button
                   onClick={() => setSelected(null)}
-                  className="p-2 rounded-xl text-ink-4 hover:text-ruby hover:bg-ruby/10 transition-all"
+                  className="p-2 rounded-xl text-ink-2 hover:text-ruby hover:bg-ruby/10 transition-all"
                   whileTap={{ scale: 0.9 }}
                 >
                   <X size={18} />
@@ -203,7 +203,7 @@ export const AuditLogView: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Input Payload</span>
+                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2">Input Payload</span>
                   </div>
                   <pre className="bg-canvas rounded-xl border border-border p-4 text-[12px] font-mono text-ink-2 whitespace-pre-wrap overflow-x-auto leading-relaxed">
                     {JSON.stringify(selectedLog.input_payload, null, 2)}
@@ -213,7 +213,7 @@ export const AuditLogView: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald" />
-                      <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">Output Payload</span>
+                      <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2">Output Payload</span>
                     </div>
                     <pre className="bg-canvas rounded-xl border border-border p-4 text-[12px] font-mono text-ink-2 whitespace-pre-wrap overflow-x-auto leading-relaxed">
                       {JSON.stringify(selectedLog.output_payload, null, 2)}

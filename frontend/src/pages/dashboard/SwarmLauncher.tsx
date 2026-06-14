@@ -97,7 +97,7 @@ export const SwarmLauncher: React.FC = () => {
           <h1 className="font-display font-black text-[36px] text-white leading-tight uppercase tracking-wide">
             Launch New Swarm Run
           </h1>
-          <p className="mt-2 text-[14px] text-ink-4 leading-relaxed font-light max-w-lg mx-auto">
+          <p className="mt-2 text-[14px] text-ink-2 leading-relaxed font-light max-w-lg mx-auto">
             Configure mission parameters and select your agent crew to initiate a coordinated multi-agent task execution.
           </p>
         </div>

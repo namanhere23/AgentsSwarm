@@ -30,13 +30,13 @@ jobs:
           git pull origin main
           
           # Install any new dependencies if needed
-          venv/bin/pip install -r backend/requirements.txt || true
+          venv/bin/pip install -r backend/requirements.txt
           
-          # Kill old processes
+          # Kill old processes securely without killing the deployment script itself
           echo "Stopping old servers and clearing screen sessions..."
-          sudo pkill -f uvicorn || true
-          sudo pkill -f backend.workers || true
-          sudo pkill -f chroma || true
+          sudo pkill -f "[u]vicorn" || true
+          sudo pkill -f "[b]ackend.workers" || true
+          sudo pkill -f "[c]hroma run" || true
           # Find all screen sessions named swarm_api and quit them individually
           screen -ls | grep '\.swarm_api' | awk '{print $1}' | xargs -I{} screen -S {} -X quit || true
           

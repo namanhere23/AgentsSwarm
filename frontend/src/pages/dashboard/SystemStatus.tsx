@@ -69,7 +69,7 @@ export const SystemStatus: React.FC = () => {
       >
         <div>
           <h1 className="page-title">System Status</h1>
-          <p className="text-[14px] text-ink-4 mt-2">
+          <p className="text-[14px] text-ink-2 mt-2">
             Real-time health monitoring and quota observability.
           </p>
         </div>
@@ -77,7 +77,7 @@ export const SystemStatus: React.FC = () => {
         <div className="flex items-center gap-3">
           <span
             className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[12px] font-bold tracking-wider uppercase ${
-              loading ? 'border-border text-ink-4 bg-white/[0.03]' :
+              loading ? 'border-border text-ink-2 bg-white/[0.03]' :
               isHealthy
                 ? 'border-emerald/30 text-emerald bg-emerald/10 shadow-glow-emerald'
                 : 'border-ruby/30 text-ruby bg-ruby/10 shadow-glow-ruby'
@@ -113,8 +113,8 @@ export const SystemStatus: React.FC = () => {
         {/* Infrastructure health */}
         <motion.div variants={itemVariants} className="glass rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <Activity size={16} className="text-ink-4" />
-            <h3 className="text-[13px] font-semibold tracking-[0.12em] uppercase text-ink-4">
+            <Activity size={16} className="text-ink-2" />
+            <h3 className="text-[13px] font-semibold tracking-[0.12em] uppercase text-ink-2">
               Infrastructure
             </h3>
           </div>
@@ -129,7 +129,7 @@ export const SystemStatus: React.FC = () => {
                   transition={{ delay: i * 0.07 }}
                   className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
                 >
-                  <span className="text-[14px] text-ink-3 capitalize font-medium">
+                  <span className="text-[14px] text-ink-2 capitalize font-medium">
                     {name.replace(/_/g, ' ')}
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -160,7 +160,7 @@ export const SystemStatus: React.FC = () => {
         <motion.div variants={itemVariants} className="glass rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-4 h-4 rounded bg-gradient-brand" />
-            <h3 className="text-[13px] font-semibold tracking-[0.12em] uppercase text-ink-4">
+            <h3 className="text-[13px] font-semibold tracking-[0.12em] uppercase text-ink-2">
               API Quotas
             </h3>
           </div>
@@ -182,8 +182,8 @@ export const SystemStatus: React.FC = () => {
                 return (
                   <div key={i}>
                     <div className="flex justify-between text-[13px] mb-2">
-                      <span className="text-ink-3 font-medium">{label}</span>
-                      <span className="text-ink-4 tabular-nums font-mono">
+                      <span className="text-ink-2 font-medium">{label}</span>
+                      <span className="text-ink-2 tabular-nums font-mono">
                         {used.toLocaleString()} / {limit.toLocaleString()}
                       </span>
                     </div>

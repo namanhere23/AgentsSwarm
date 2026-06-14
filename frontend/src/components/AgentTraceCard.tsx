@@ -8,7 +8,7 @@ interface Props { task: TaskTrace; }
 const STATUS_CONFIG = {
   completed: { border: '#10b981', dot: 'bg-emerald', badge: 'border-emerald/25 text-emerald bg-emerald/10', label: 'Completed' },
   running:   { border: '#3b82f6', dot: 'bg-primary animate-pulse', badge: 'border-primary/25 text-primary bg-primary/10', label: 'Running'   },
-  pending:   { border: '#475569', dot: 'bg-ink-4', badge: 'border-border text-ink-4 bg-white/[0.03]', label: 'Pending'   },
+  pending:   { border: '#475569', dot: 'bg-ink-4', badge: 'border-border text-ink-2 bg-white/[0.03]', label: 'Pending'   },
   failed:    { border: '#e11d48', dot: 'bg-ruby',   badge: 'border-ruby/25 text-ruby bg-ruby/10',   label: 'Failed'    },
 };
 
@@ -76,7 +76,7 @@ export const AgentTraceCard: React.FC<Props> = ({ task }) => {
                   <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary mb-2">
                     Thought
                   </div>
-                  <p className="text-[13px] text-ink-3 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-[13px] text-ink-2 leading-relaxed whitespace-pre-wrap">
                     {task.thought}
                   </p>
                 </div>
@@ -96,7 +96,7 @@ export const AgentTraceCard: React.FC<Props> = ({ task }) => {
                   <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald mb-2">
                     Observation
                   </div>
-                  <p className="text-[13px] text-ink-3 font-mono leading-relaxed whitespace-pre-wrap">
+                  <p className="text-[13px] text-ink-2 font-mono leading-relaxed whitespace-pre-wrap">
                     {task.observation}
                   </p>
                 </div>

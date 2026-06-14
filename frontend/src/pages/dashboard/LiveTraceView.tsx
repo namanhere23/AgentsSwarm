@@ -48,7 +48,7 @@ export const LiveTraceView: React.FC = () => {
             <h1 className="font-display font-bold text-[28px] text-ink tracking-tight">
               Swarm Run
             </h1>
-            <span className="font-mono text-[15px] text-ink-4">{id?.slice(0, 8)}…</span>
+            <span className="font-mono text-[15px] text-ink-2">{id?.slice(0, 8)}…</span>
           </div>
           <div className="flex items-center gap-2">
             <span
@@ -62,7 +62,7 @@ export const LiveTraceView: React.FC = () => {
               )}
               {status.label}
             </span>
-            <span className="text-[13px] text-ink-4">
+            <span className="text-[13px] text-ink-2">
               {completedCount}/{tasks.length} tasks completed
             </span>
           </div>
@@ -100,11 +100,11 @@ export const LiveTraceView: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
       >
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-[13px] font-semibold tracking-[0.1em] uppercase text-ink-4">
+          <div className="flex items-center gap-2 text-[13px] font-semibold tracking-[0.1em] uppercase text-ink-2">
             <Cpu size={13} />
             Task Progress
           </div>
-          <span className="text-[13px] font-medium tabular-nums text-ink-3">
+          <span className="text-[13px] font-medium tabular-nums text-ink-2">
             {completedCount} / {tasks.length}
           </span>
         </div>
@@ -137,7 +137,7 @@ export const LiveTraceView: React.FC = () => {
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                   task.status === 'completed' ? 'border-emerald/25 text-emerald bg-emerald/10' :
                   task.status === 'running'   ? 'border-primary/25 text-primary bg-primary/10' :
-                  'border-border text-ink-4 bg-white/[0.02]'
+                  'border-border text-ink-2 bg-white/[0.02]'
                 }`}
               >
                 {task.status === 'completed' && <CheckCircle2 size={10} />}
@@ -163,7 +163,7 @@ export const LiveTraceView: React.FC = () => {
                 <div className="absolute inset-2 rounded-full bg-primary/10 animate-pulse" />
               </div>
               <div className="text-center">
-                <p className="text-[15px] text-ink-3 font-medium">Connecting to swarm coordinator…</p>
+                <p className="text-[15px] text-ink-2 font-medium">Connecting to swarm coordinator…</p>
                 <p className="text-[13px] text-ink-5 mt-1">Waiting for agent events</p>
               </div>
             </motion.div>

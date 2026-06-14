@@ -55,7 +55,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ open, onClose })
               </div>
               <motion.button
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-ink-4 hover:text-ruby hover:bg-ruby/10 transition-all"
+                className="p-1.5 rounded-lg text-ink-2 hover:text-ruby hover:bg-ruby/10 transition-all"
                 whileTap={{ scale: 0.9 }}
               >
                 <X size={16} />
