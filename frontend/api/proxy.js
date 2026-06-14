@@ -16,7 +16,7 @@ export default async function handler(req) {
   // url.pathname will be something like "/api/crews"
   // We want to forward it to "http://[IP_ADDRESS]/crews"
   const targetPath = url.pathname.replace(/^\/api/, '');
-  const targetUrl = `http://${backendIp}:8000${targetPath}${url.search}`;
+  const targetUrl = `http://${backendIp}${targetPath}${url.search}`;
 
   try {
     const response = await fetch(targetUrl, {
