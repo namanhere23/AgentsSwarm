@@ -46,26 +46,6 @@ export const ApprovalCenter: React.FC = () => {
       removeApprovalById(id);
       setRejectId(null);
       setRejectReason('');
-
-  const handleApprove = async (id: string) => {
-    setLoading(true);
-    try {
-      await api.post(`/approvals/${id}/approve`);
-      removeApprovalById(id);
-    } catch (err) {
-      console.error('Approve dispatch failed', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    setLoading(true);
-    try {
-      await api.post(`/approvals/${id}/reject`, { reason: rejectReason });
-      removeApprovalById(id);
-      setRejectId(null);
-      setRejectReason('');
     } catch (err) {
       console.error('Reject dispatch failed', err);
     } finally {

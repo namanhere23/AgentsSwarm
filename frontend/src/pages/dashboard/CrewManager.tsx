@@ -44,7 +44,6 @@ export const CrewManager: React.FC = () => {
           setErrors([{ field: 'api', message: 'The server rejected the crew definition.' }]);
         }
       } else {
-      } else {
         setErrors([{ field: 'server', message: 'Failed to write crew configuration template.' }]);
       }
     }
