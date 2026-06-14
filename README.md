@@ -244,8 +244,21 @@ Nexsus features native terminal support for seamless developer interaction. You 
 irm https://agents-swarm.vercel.app/cli/install.ps1 | iex
 ```
 
+### Authentication
+
+Before using the CLI, you need to generate a personal API Key:
+1. Log in to the [Nexsus Dashboard](https://agents-swarm.vercel.app/).
+2. Navigate to the **API Keys** section in the sidebar.
+3. Click **Create new secret key** and copy your `nx-sk-...` token.
+4. Set it as an environment variable in your terminal:
+
+```powershell
+[Environment]::SetEnvironmentVariable('NEXSUS_API_KEY', 'nx-sk-your-secret-key', 'User')
+$env:NEXSUS_API_KEY="nx-sk-your-secret-key"
+```
+
 ### Usage
-Once installed, you can use the `nexsus` command globally:
+Once installed and authenticated, you can use the `nexsus` command globally:
 ```powershell
 nexsus --help
 nexsus run "Analyze quarterly earnings"
