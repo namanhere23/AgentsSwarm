@@ -37,3 +37,8 @@
   - `INSERT` is enabled.
   - `UPDATE` and `DELETE` are disabled/denied.
 - Every external mutation is permanently recorded, trace ID linked, and is cryptographically and operationally untamperable.
+
+## 8. GCP Cloud Security
+- **Identity and Access Management (IAM):** The GCP service account executing the containers strictly implements least-privilege policies.
+- **Secret Management:** LLM API keys and Supabase connection strings are securely pulled from Google Secret Manager at container runtime; they are never baked into Docker images.
+- **Network Boundaries:** Internal microservices (like Redis and ChromaDB) are restricted within a virtual private cloud (VPC) network, and are not exposed to the public internet. Only the FastAPI gateway and Frontend asset endpoints receive external traffic.

@@ -1,147 +1,172 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { ShortcutsModal } from './ShortcutsModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Zap, Radio, CheckCircle2, Brain, Users, ClipboardList,
+  Activity, LogOut, Bell, Settings, ChevronLeft, ChevronRight
+} from 'lucide-react';
 
 const navItems = [
-  { path: '/dashboard', label: '⚡ Swarm Launcher', end: true },
-  { path: '/dashboard/trace', label: '📡 Live Trace', end: false },
-  { path: '/dashboard/approvals', label: '✅ Approvals', end: false },
-  { path: '/dashboard/memory', label: '🧠 Memory Explorer', end: false },
-  { path: '/dashboard/crews', label: '🤖 Crew Manager', end: false },
-  { path: '/dashboard/audit', label: '📋 Audit Log', end: false },
-  { path: '/dashboard/system', label: '🔧 System Status', end: false },
+  { path: '/dashboard',          label: 'Swarm Launcher',  Icon: Zap,           end: true  },
+  { path: '/dashboard/trace',    label: 'Live Trace',      Icon: Radio,          end: false },
+  { path: '/dashboard/approvals',label: 'Approvals',       Icon: CheckCircle2,   end: false },
+  { path: '/dashboard/memory',   label: 'Memory Explorer', Icon: Brain,          end: false },
+  { path: '/dashboard/crews',    label: 'Crew Manager',    Icon: Users,          end: false },
+  { path: '/dashboard/audit',    label: 'Audit Log',       Icon: ClipboardList,  end: false },
+  { path: '/dashboard/system',   label: 'System Status',   Icon: Activity,       end: false },
 ];
 
 export const DashboardLayout: React.FC = () => {
-  const logout = useAuthStore((state) => state.logout);
+  const logout   = useAuthStore((s) => s.logout);
+  const user     = getAuth().currentUser;
   const navigate = useNavigate();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+  const [isShortcutsOpen, setShortcuts] = useState(false);
 
   const handleSignOut = async () => {
-    try {
-      const auth = getAuth();
-      await signOut(auth);
-      logout();
-      navigate('/login');
-    } catch {
-      // Force logout even if Firebase signOut fails
-      logout();
-      navigate('/login');
-    }
+    try { await signOut(getAuth()); } catch (err) { console.error(err); }
+    logout();
+    navigate('/login');
   };
 
-  // Global Keyboard Shortcuts
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger shortcuts if user is typing in an input/textarea
-      const target = e.target as HTMLElement;
-      const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
-      
-      if (isTyping) return;
-
+    const handleKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
         e.preventDefault();
-        setIsSidebarCollapsed(prev => !prev);
+        setCollapsed((c) => !c);
       } else if (e.key === '?') {
         e.preventDefault();
-        setIsShortcutsOpen(true);
+        setShortcuts(true);
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
   return (
-    <div className="flex h-screen bg-canvas text-ink font-sans overflow-hidden relative">
-      <ShortcutsModal open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
-      
-      {/* Background ambient light mesh */}
-      <div className="absolute inset-0 gradient-mesh-backdrop"></div>
+    <div className="flex h-screen bg-black text-ink overflow-hidden font-sans">
+      <ShortcutsModal open={isShortcutsOpen} onClose={() => setShortcuts(false)} />
 
-      {/* Sidebar */}
-      <aside 
-        className={`flex-shrink-0 bg-canvas-soft/40 backdrop-blur-2xl border-r border-hairline flex flex-col z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'w-20' : 'w-64'
-        }`}
+      {/* ── Sidebar ──────────────────────────────────────── */}
+      <motion.aside
+        animate={{ width: collapsed ? 72 : 260 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="flex-shrink-0 flex flex-col relative z-20 bg-[#040404] border-r border-white/[0.05] overflow-hidden"
       >
-        <div className="p-6 border-b border-hairline/50 relative overflow-hidden flex items-center justify-between">
-          {/* Subtle neon accent */}
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-magenta to-ruby opacity-70"></div>
-          
-          <Link to="/dashboard" className={`block transition-opacity duration-300 ${isSidebarCollapsed ? 'opacity-0 hidden' : 'opacity-100 block'}`}>
-            <h1 className="text-[20px] font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-primary to-magenta mb-1 hover:opacity-80 transition-opacity">
-              AGENT SWARMS
-            </h1>
-            <p className="text-[11px] text-ink-mute uppercase tracking-[0.2em] font-medium">Command Center</p>
-          </Link>
-          
-          {isSidebarCollapsed && (
-            <Link to="/dashboard" className="mx-auto block text-center">
-              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-magenta">AS</span>
-            </Link>
-          )}
+        {/* Logo / wordmark */}
+        <div className="flex items-center justify-between px-4 py-6 flex-shrink-0">
+          <AnimatePresence mode="wait">
+            {!collapsed ? (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.2 }}
+                className="pl-2"
+              >
+                <Link to="/dashboard" className="block cursor-pointer z-50 flex items-center gap-3">
+                  <img src="/logo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                  <div>
+                    <div className="text-[16px] font-bold tracking-[0.05em] text-gradient-brand leading-none">
+                      Nexus
+                    </div>
+                    <div className="text-[9px] tracking-[0.2em] uppercase text-ink-5 mt-1 leading-none">
+                      AI Command Center
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="mx-auto"
+              >
+                <Link to="/dashboard" className="cursor-pointer z-50 block">
+                  <img src="/logo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.parentElement!.innerHTML='<span class="font-display font-black text-[18px] text-gradient-brand">N</span>'; }} />
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Sidebar Toggle Button (Hidden on collapsed, shows on hover or uncollapsed if desired) */}
-          {!isSidebarCollapsed && (
-             <button 
-                onClick={() => setIsSidebarCollapsed(true)} 
-                className="text-ink-mute hover:text-primary transition-colors p-1"
-                title="Collapse Sidebar (Ctrl+B)"
-             >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-             </button>
+          {!collapsed && (
+            <button
+              onClick={() => setCollapsed(true)}
+              className="p-1.5 rounded-lg text-ink-5 hover:text-ink hover:bg-white/[0.05] transition-all"
+            >
+              <ChevronLeft size={16} />
+            </button>
           )}
         </div>
 
-        {/* Expand button when collapsed */}
-        {isSidebarCollapsed && (
-           <div className="p-4 border-b border-hairline/50 flex justify-center">
-             <button 
-                onClick={() => setIsSidebarCollapsed(false)} 
-                className="text-ink-mute hover:text-primary transition-colors p-2 rounded-lg bg-canvas-soft hover:bg-primary/10"
-                title="Expand Sidebar (Ctrl+B)"
-             >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-             </button>
-           </div>
+        {collapsed && (
+          <div className="flex justify-center pb-4">
+            <button
+              onClick={() => setCollapsed(false)}
+              className="p-1.5 rounded-lg text-ink-5 hover:text-ink hover:bg-white/[0.05] transition-all"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         )}
 
-        <nav className="flex-1 py-6 overflow-y-auto custom-scrollbar overflow-x-hidden">
-          <ul className={`space-y-2 px-4 ${isSidebarCollapsed ? 'px-2' : 'px-4'}`}>
-            {navItems.map((item) => (
-              <li key={item.path}>
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3">
+          <ul className="space-y-1">
+            {navItems.map(({ path, label, Icon, end }) => (
+              <li key={path}>
                 <NavLink
-                  to={item.path}
-                  end={item.end}
-                  title={isSidebarCollapsed ? item.label : undefined}
+                  to={path}
+                  end={end}
+                  title={collapsed ? label : undefined}
                   className={({ isActive }) =>
-                    `group flex items-center rounded-xl transition-all duration-300 text-[14px] font-medium relative overflow-hidden ${
-                      isSidebarCollapsed ? 'justify-center py-3 px-0' : 'px-4 py-3'
+                    `relative group flex items-center rounded-xl transition-all duration-200 text-[13px] font-medium ${
+                      collapsed ? 'justify-center px-0 py-3' : 'px-4 py-3'
                     } ${
                       isActive
-                        ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
-                        : 'text-ink-mute hover:bg-canvas-soft/80 hover:text-ink hover:border hover:border-hairline-input border border-transparent'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-ink-4 hover:bg-white/[0.03] hover:text-ink-2'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
                       {isActive && (
-                        <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-1/2 bg-primary rounded-r-full shadow-[0_0_8px_#3b82f6]`}></div>
+                        <motion.div
+                          layoutId="active-indicator"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-primary rounded-r-full shadow-glow-blue"
+                          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        />
                       )}
-                      
-                      {/* Extract the emoji from the label to use as icon when collapsed */}
-                      {isSidebarCollapsed ? (
-                        <span className="text-lg">{item.label.split(' ')[0]}</span>
-                      ) : (
-                        <span className={`transition-transform duration-300 whitespace-nowrap ${isActive ? 'translate-x-1' : 'group-hover:translate-x-1'}`}>
-                          {item.label}
-                        </span>
-                      )}
+
+                      <Icon
+                        size={16}
+                        strokeWidth={isActive ? 2.5 : 1.8}
+                        className={collapsed ? '' : `mr-3 ${isActive ? 'text-primary' : ''}`}
+                      />
+
+                      <AnimatePresence>
+                        {!collapsed && (
+                          <motion.span
+                            initial={{ opacity: 0, x: -4 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -4 }}
+                            className={`whitespace-nowrap transition-colors ${isActive ? 'translate-x-0.5' : ''}`}
+                          >
+                            {label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </>
                   )}
                 </NavLink>
@@ -150,40 +175,76 @@ export const DashboardLayout: React.FC = () => {
           </ul>
         </nav>
 
-        {/* Global Shortcuts Hint */}
-        {!isSidebarCollapsed && (
-          <div className="px-6 py-4">
-             <button 
-               onClick={() => setIsShortcutsOpen(true)}
-               className="w-full text-xs text-ink-mute/70 hover:text-primary transition-colors flex items-center justify-between p-2 rounded-lg hover:bg-canvas-soft border border-transparent hover:border-hairline"
-             >
-                <span className="flex items-center"><svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Shortcuts</span>
-                <kbd className="px-1.5 py-0.5 bg-canvas rounded border border-hairline/50 font-mono font-semibold">?</kbd>
-             </button>
-          </div>
-        )}
-
-        <div className={`p-5 border-t border-hairline/50 ${isSidebarCollapsed ? 'px-2' : ''}`}>
+        {/* Bottom */}
+        <div className="flex-shrink-0 px-3 py-6 border-t border-white/[0.05]">
           <button
             onClick={handleSignOut}
-            title={isSidebarCollapsed ? "Sign Out" : undefined}
-            className={`w-full flex items-center justify-center py-2.5 text-sm text-ink-mute/80 hover:text-ruby hover:bg-ruby/10 border border-transparent hover:border-ruby/20 rounded-xl transition-all duration-300 group ${
-              isSidebarCollapsed ? 'px-0' : 'px-4'
+            title={collapsed ? 'Sign Out' : undefined}
+            className={`w-full flex items-center text-[13px] text-ink-5 hover:text-ink-3 hover:bg-white/[0.03] rounded-xl transition-all duration-200 group ${
+              collapsed ? 'justify-center py-3' : 'px-4 py-3 gap-3'
             }`}
           >
-            <svg className={`w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1 ${!isSidebarCollapsed ? 'mr-2' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {!isSidebarCollapsed && "Sign Out"}
+            <LogOut size={16} strokeWidth={1.8} className="transition-transform group-hover:-translate-x-0.5 flex-shrink-0" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  Sign Out
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
+          
+          {!collapsed && (
+            <div className="mt-4 px-4 flex items-center justify-between text-[11px] text-ink-5 font-mono">
+              <span>STATUS</span>
+              <span className="flex items-center gap-1.5 text-emerald">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald shadow-glow-emerald"></span>
+                OK
+              </span>
+            </div>
+          )}
         </div>
-      </aside>
+      </motion.aside>
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden relative z-0 transition-all duration-300">
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-canvas-soft/80 to-transparent pointer-events-none -z-10"></div>
-        <Outlet />
+      {/* ── Main content area ─────────────────────────────── */}
+      <main className="flex-1 flex flex-col relative h-full bg-black overflow-hidden">
+        
+        {/* Top Header Row */}
+        <div className="flex-shrink-0 w-full flex justify-end px-8 pt-6 pb-2 z-50 relative">
+          <div className="flex items-center gap-2 px-2 py-1.5 bg-[#0a0a0c] border border-white/5 rounded-2xl shadow-2xl">
+            <button className="p-2 text-ink-4 hover:text-ink transition-colors">
+              <Bell size={18} />
+            </button>
+            <button className="p-2 text-ink-4 hover:text-ink transition-colors">
+              <Settings size={18} />
+            </button>
+            <div className="w-8 h-8 rounded-full border border-white/10 overflow-hidden ml-2 bg-canvas">
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-primary font-bold text-[12px]">
+                  {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden relative z-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="min-h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
     </div>
   );

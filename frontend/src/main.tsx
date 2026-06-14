@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { Login } from './pages/Login';
 import { RouteGuard } from './components/RouteGuard';
 import { DashboardLayout } from './components/DashboardLayout';
@@ -48,5 +49,20 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    <Toaster
+      position="bottom-right"
+      toastOptions={{
+        style: {
+          background: '#18181b',
+          color: '#f8fafc',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '10px',
+          fontSize: '14px',
+          fontFamily: 'Inter, system-ui, sans-serif',
+        },
+        success: { iconTheme: { primary: '#10b981', secondary: '#18181b' } },
+        error:   { iconTheme: { primary: '#e11d48', secondary: '#18181b' } },
+      }}
+    />
   </React.StrictMode>
 );

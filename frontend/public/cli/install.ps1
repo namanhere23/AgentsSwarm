@@ -11,11 +11,11 @@ to the User's Environment PATH registry.
 $ErrorActionPreference = "Stop"
 
 $nexsusDir = Join-Path $env:USERPROFILE ".nexsus\bin"
-$serverUrl = "https://agents-swarm.vercel.app/api"
+$serverUrl = "http://localhost:5173/api"
 [Environment]::SetEnvironmentVariable('NEXSUS_API_URL', $serverUrl, 'User')
 Write-Host "Automatically linked CLI to Server: $serverUrl" -ForegroundColor Green
 
-$wrapperUrl = "https://agents-swarm.vercel.app/api/cli/nexsus.ps1"
+$wrapperUrl = "http://localhost:5173/api/cli/nexsus.ps1"
 $wrapperPath = Join-Path $nexsusDir "nexsus.ps1"
 
 Write-Host "Installing Nexsus CLI globally..." -ForegroundColor Cyan
