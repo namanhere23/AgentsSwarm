@@ -24,13 +24,15 @@ export default async function handler(req, res) {
     bodyData = Buffer.concat(chunks);
   }
 
+  const proxyHeaders = { ...req.headers };
+  delete proxyHeaders['host'];
+  delete proxyHeaders['connection'];
+  delete proxyHeaders['content-length'];
+
   try {
     const fetchResponse = await fetch(targetUrl, {
       method: req.method,
-      headers: {
-        ...req.headers,
-        host: backendIp, // override host to prevent Vercel edge loops
-      },
+      headers: proxyHeaders,
       body: bodyData,
     });
 
