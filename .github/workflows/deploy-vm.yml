@@ -32,13 +32,15 @@ jobs:
           # Install any new dependencies if needed
           venv/bin/pip install -r backend/requirements.txt
           
-          # Kill old processes securely without killing the deployment script itself
+          # Kill old processes
           echo "Stopping old servers and clearing screen sessions..."
-          sudo pkill -f "[u]vicorn" || true
-          sudo pkill -f "[b]ackend.workers" || true
-          sudo pkill -f "[c]hroma run" || true
-          # Find all screen sessions named swarm_api and quit them individually
-          screen -ls | grep '\.swarm_api' | awk '{print $1}' | xargs -I{} screen -S {} -X quit || true
+          # Close all previous screen sessions (this safely kills uvicorn and workers inside them)
+          screen -ls | awk '/\.swarm_api\t/ {print $1}' | xargs -r -I{} screen -S {} -X quit || true
+          
+          # Safely kill Chroma DB without killing the deployment script
+          for pid in $(pgrep -f "chroma run" || true); do
+            sudo kill -9 $pid || true
+          done
           
           # Start Chroma DB
           echo "Starting Chroma DB..."
