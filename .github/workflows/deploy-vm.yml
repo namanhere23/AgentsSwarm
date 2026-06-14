@@ -37,8 +37,8 @@ jobs:
           
           # Kill old processes
           echo "Stopping old servers and clearing screen sessions..."
-          sudo pkill -f "[u]vicorn" || true
-          sudo pkill -f "[b]ackend.workers" || true
+          sudo fuser -k 80/tcp || true
+          ps aux | grep "venv/bin/python -m backend.workers" | grep -v "grep\|bash" | awk '{print $2}' | sudo xargs -r kill -9 || true
           # Close all previous screen sessions
           screen -ls | awk '/\.swarm_api\t/ {print $1}' | xargs -r -I{} screen -S {} -X quit || true
           
