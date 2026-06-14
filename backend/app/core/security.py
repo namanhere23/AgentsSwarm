@@ -25,14 +25,18 @@ async def verify_firebase_token(token: str) -> str:
             m.update(token.encode("utf-8"))
             return str(uuid.UUID(m.hexdigest()))
 
-    try:
+  try:
         decoded_token = auth.verify_id_token(token)
         uid = decoded_token.get("uid")
         if not uid:
             raise HTTPException(
                 status_code=401, detail="Invalid token: missing uid claim"
             )
-        return uid
+        import uuid
+        import hashlib
+        m = hashlib.md5()
+        m.update(uid.encode("utf-8"))
+        return str(uuid.UUID(m.hexdigest()))
     except (auth.InvalidIdTokenError, auth.ExpiredIdTokenError) as e:
         raise HTTPException(
             status_code=401, detail=f"Invalid or expired token: {str(e)}"
