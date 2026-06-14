@@ -81,6 +81,9 @@ function Run-Swarm {
         crew_id   = "research-crew"
     } | ConvertTo-Json
     
+    # Fix: Disable 100-Continue which breaks Node 18 fetch in Vercel proxies
+    [System.Net.ServicePointManager]::Expect100Continue = $false
+    
     try {
         $response = Invoke-RestMethod -Uri "$API_URL/swarms" -Method Post -Headers $headers -Body $body
         $runId = $response.swarm_run_id

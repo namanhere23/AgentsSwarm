@@ -28,6 +28,7 @@ export default async function handler(req, res) {
   delete proxyHeaders['host'];
   delete proxyHeaders['connection'];
   delete proxyHeaders['content-length'];
+  delete proxyHeaders['expect'];
 
   try {
     const fetchResponse = await fetch(targetUrl, {
