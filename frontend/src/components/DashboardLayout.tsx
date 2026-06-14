@@ -6,7 +6,7 @@ import { ShortcutsModal } from './ShortcutsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Zap, Radio, CheckCircle2, Brain, Users, ClipboardList,
-  Activity, LogOut, Bell, Settings, ChevronLeft, ChevronRight
+  Activity, LogOut, Bell, Settings, ChevronLeft, ChevronRight, Key
 } from 'lucide-react';
 
 const navItems = [
@@ -17,6 +17,7 @@ const navItems = [
   { path: '/dashboard/crews',    label: 'Crew Manager',    Icon: Users,          end: false },
   { path: '/dashboard/audit',    label: 'Audit Log',       Icon: ClipboardList,  end: false },
   { path: '/dashboard/system',   label: 'System Status',   Icon: Activity,       end: false },
+  { path: '/dashboard/api-keys', label: 'API Keys',        Icon: Key,            end: false },
 ];
 
 export const DashboardLayout: React.FC = () => {

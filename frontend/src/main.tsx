@@ -15,6 +15,7 @@ import { MemoryExplorer } from './pages/dashboard/MemoryExplorer';
 import { CrewManager } from './pages/dashboard/CrewManager';
 import { AuditLogView } from './pages/dashboard/AuditLogView';
 import { SystemStatus } from './pages/dashboard/SystemStatus';
+import { ApiKeys } from './pages/dashboard/ApiKeys';
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
           { path: 'crews', element: <CrewManager /> },
           { path: 'audit', element: <AuditLogView /> },
           { path: 'system', element: <SystemStatus /> },
+          { path: 'api-keys', element: <ApiKeys /> },
         ]
       },
     ],
