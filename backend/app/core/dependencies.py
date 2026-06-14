@@ -12,17 +12,15 @@ async def get_current_user(request: Request, auth: HTTPAuthorizationCredentials 
     token = auth.credentials
     uid = await verify_firebase_token(token)
 
-    from backend.app.core.config import settings
-    if settings.ENVIRONMENT == "development":
-        # Auto-upsert dummy user to satisfy Foreign Key constraints
-        try:
-            db_client = get_supabase_client()
-            await run_in_threadpool(
-                lambda: db_client.table("users").upsert({"id": uid}).execute()
-            )
-        except Exception:
-            # Safely ignore if user already exists or fails
-            pass
+    # Auto-upsert dummy user to satisfy Foreign Key constraints
+    try:
+        db_client = get_supabase_client()
+        await run_in_threadpool(
+            lambda: db_client.table("users").upsert({"id": uid}).execute()
+        )
+    except Exception:
+        # Safely ignore if user already exists or fails
+        pass
 
     # Store both user_id and token on request state for downstream use
     request.state.user_id = uid
