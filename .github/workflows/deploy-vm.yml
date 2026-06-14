@@ -37,7 +37,8 @@ jobs:
           sudo pkill -f uvicorn || true
           sudo pkill -f backend.workers || true
           sudo pkill -f chroma || true
-          screen -S swarm_api -X quit || true
+          # Find all screen sessions named swarm_api and quit them individually
+          screen -ls | grep '\.swarm_api' | awk '{print $1}' | xargs -I{} screen -S {} -X quit || true
           
           # Start Chroma DB
           echo "Starting Chroma DB..."
