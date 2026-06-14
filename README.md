@@ -1,4 +1,4 @@
-# Nexus
+# Nexsus
 
 > *"One agent is useful. A swarm of agents working together? That's a different game entirely."*
 
@@ -10,7 +10,7 @@ Presented by **Team Nexsus** for the Nationwide Microsoft Hackathon.
 
 ## 🌟 The Vision
 
-Complex problems require a team. Traditional single-agent systems suffer from context saturation, hallucinations, and rigidity when faced with massive, ambiguous goals. **Nexus** dismantles the single-agent bottleneck. By centralizing cognitive orchestration and distributing workloads across specialized agent microservices, we shift the user from being a manual "Prompt Engineer" to an "Executive Approver."
+Complex problems require a team. Traditional single-agent systems suffer from context saturation, hallucinations, and rigidity when faced with massive, ambiguous goals. **Nexsus** dismantles the single-agent bottleneck. By centralizing cognitive orchestration and distributing workloads across specialized agent microservices, we shift the user from being a manual "Prompt Engineer" to an "Executive Approver."
 
 ### Key Innovations:
 *   **Role-Based Collaboration Network:** A dynamic execution graph of Orchestrators, Planners, Retrievers, Executors, and Validators.
@@ -32,7 +32,7 @@ Complex problems require a team. Traditional single-agent systems suffer from co
 
 ## ☁️ Google Cloud Deployment (GCP)
 
-Nexus is fully containerized and designed for scalable deployment on **Google Cloud Platform (GCP)**. 
+Nexsus is fully containerized and designed for scalable deployment on **Google Cloud Platform (GCP)**. 
 
 1. **Dockerized Microservices**: The backend (FastAPI, Celery workers) and frontend (Vite React) are built as portable Docker containers.
 2. **Cloud Managed Infrastructure**: Redis streams, ChromaDB vector storage, and PostgreSQL (via Supabase) are fully decoupled, allowing the core application to scale statelessly in the cloud.
@@ -42,12 +42,11 @@ Nexus is fully containerized and designed for scalable deployment on **Google Cl
 
 ## 💻 Terminal Support (CLI)
 
-Nexus features native terminal support for seamless developer interaction. You can launch, monitor, and configure swarms directly from your command line using our custom PowerShell module (`nexsus.ps1`).
+Nexsus features native terminal support for seamless developer interaction. You can launch, monitor, and configure swarms directly from your command line using our custom PowerShell module (`nexsus.ps1`).
 
-### Installation
-The frontend build process automatically generates the CLI scripts. Install the module by running:
+### Install via CLI
 ```powershell
-.\public\cli\install.ps1
+irm https://agents-swarm.vercel.app/cli/install.ps1 | iex
 ```
 
 ### Usage

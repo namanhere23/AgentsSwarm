@@ -65,7 +65,7 @@ export const ApprovalCenter: React.FC = () => {
         className="mb-8"
       >
         <h1 className="page-title">Approval Center</h1>
-        <p className="text-[14px] text-ink-4 mt-2">
+        <p className="text-[14px] text-ink-2 mt-2">
           Human-in-the-loop decisions for your active agent fleet.
         </p>
       </motion.div>
@@ -91,7 +91,7 @@ export const ApprovalCenter: React.FC = () => {
             </div>
             <div className="text-center">
               <h3 className="font-display font-bold text-[22px] text-ink mb-2">All Systems Clear</h3>
-              <p className="text-[14px] text-ink-4 max-w-sm">
+              <p className="text-[14px] text-ink-2 max-w-sm">
                 No pending approvals. Your agents are executing autonomously.
               </p>
             </div>
@@ -131,7 +131,7 @@ export const ApprovalCenter: React.FC = () => {
                         <h3 className="text-[15px] font-bold text-ink font-mono tracking-wide uppercase">
                           {req.tool_name}
                         </h3>
-                        <p className="text-[12px] text-ink-4 mt-1 font-mono">
+                        <p className="text-[12px] text-ink-2 mt-1 font-mono">
                           Run: {req.swarm_run_id}
                         </p>
                       </div>
@@ -145,7 +145,7 @@ export const ApprovalCenter: React.FC = () => {
 
                     {/* Payload */}
                     <div className="mb-5">
-                      <div className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4 mb-2.5 flex items-center gap-2">
+                      <div className="text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2 mb-2.5 flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full ${risk.dot}`} />
                         Proposed Payload
                       </div>
@@ -170,7 +170,7 @@ export const ApprovalCenter: React.FC = () => {
                           className="mb-4 overflow-hidden"
                         >
                           <div className="border-t border-border pt-4 space-y-3">
-                            <label className="block text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-4">
+                            <label className="block text-[11px] font-semibold tracking-[0.15em] uppercase text-ink-2">
                               Rejection Reason
                             </label>
                             <textarea

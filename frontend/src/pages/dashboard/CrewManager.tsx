@@ -60,7 +60,7 @@ export const CrewManager: React.FC = () => {
           <h2 className="font-display font-black text-[36px] text-white leading-tight uppercase tracking-wide">
             Crew Configuration Manager
           </h2>
-          <p className="mt-2 text-[14px] text-ink-4 leading-relaxed font-light">
+          <p className="mt-2 text-[14px] text-ink-2 leading-relaxed font-light">
             Define and manage agent roles, goals, and hierarchy via YAML.
           </p>
         </div>
