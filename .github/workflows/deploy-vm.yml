@@ -1,0 +1,50 @@
+name: Deploy Backend to GCP VM
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-vm.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to GCP Compute Engine
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        port: 22
+        
+        script: |
+          echo "Starting Deployment..."
+          cd ~/AgentsSwarm
+          
+          # Pull the latest code from the main branch
+          git pull origin main
+          
+          # Install any new dependencies if needed
+          venv/bin/pip install -r backend/requirements.txt || true
+          
+          # Kill old processes
+          echo "Stopping old servers and clearing screen sessions..."
+          sudo pkill -f uvicorn || true
+          sudo pkill -f backend.workers || true
+          sudo pkill -f chroma || true
+          screen -S swarm_api -X quit || true
+          
+          # Start Chroma DB
+          echo "Starting Chroma DB..."
+          nohup venv/bin/chroma run --host localhost --port 8001 --path ./chroma_data > chroma.log 2>&1 &
+          
+          # Start Workers and Uvicorn inside a detached screen session
+          echo "Starting new API and Workers in background..."
+          screen -dmS swarm_api bash -c "sudo venv/bin/python -m backend.workers.whisper_consumer & sudo venv/bin/python -m backend.workers.tts_consumer & sudo venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 80"
+          
+          echo "Deployment Successful!"
