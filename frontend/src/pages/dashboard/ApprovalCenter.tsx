@@ -112,7 +112,7 @@ export const ApprovalCenter: React.FC = () => {
                   layout
                   className="glass rounded-2xl overflow-hidden relative"
                   style={{
-                    boxShadow: risk.glow.replaceAll('shadow-[', '').replaceAll(']', ''),
+                    boxShadow: risk.glow.replace(/shadow-\[/g, '').replace(/\]/g, ''),
                   }}
                 >
                   {/* Left risk border */}

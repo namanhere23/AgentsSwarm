@@ -236,7 +236,7 @@ export const MemoryExplorer: React.FC = () => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) setNode(null); }}
+            onClick={(e: React.MouseEvent) => { if (e.target === e.currentTarget) setNode(null); }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.94, y: 20 }}
