@@ -25,7 +25,7 @@ async def verify_firebase_token(token: str) -> str:
             m.update(token.encode("utf-8"))
             return str(uuid.UUID(m.hexdigest()))
 
-  try:
+    try:
         decoded_token = auth.verify_id_token(token)
         uid = decoded_token.get("uid")
         if not uid:
