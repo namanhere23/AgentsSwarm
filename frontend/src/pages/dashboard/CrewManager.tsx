@@ -44,65 +44,97 @@ export const CrewManager: React.FC = () => {
           setErrors([{ field: 'api', message: 'The server rejected the crew definition.' }]);
         }
       } else {
+      } else {
         setErrors([{ field: 'server', message: 'Failed to write crew configuration template.' }]);
       }
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-8 font-sohne font-light tracking-tight text-text">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-medium tracking-tighter">Crew Configuration Manager</h2>
+    <div className="max-w-6xl mx-auto py-8 font-sans">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-[32px] font-light tracking-[-0.64px] text-white">Crew Configuration Manager</h2>
+          <p className="text-gray-400 mt-1 text-sm">Define and manage agent roles, goals, and hierarchy via YAML.</p>
+        </div>
         <div className="flex gap-3 items-center">
-          <input
-            type="text"
-            value={crewId}
-            onChange={(e) => setCrewId(e.target.value)}
-            placeholder="e.g. research-crew"
-            className="rounded-lg border border-ink-300 bg-ink-200 px-4 py-2 text-sm text-text focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          <div className="relative group">
+            <input
+              type="text"
+              value={crewId}
+              onChange={(e) => setCrewId(e.target.value)}
+              placeholder="e.g. research-crew"
+              className="w-64 rounded-xl border border-white/10 bg-[#0f1115] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 shadow-inner transition-all placeholder:text-gray-600"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <span className="text-xs text-gray-600 font-mono">.yaml</span>
+            </div>
+          </div>
           <button
             onClick={handleSave}
-            className="rounded-lg bg-primary px-5 py-2 font-medium text-white hover:bg-primary-hover transition-colors"
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-2.5 text-sm font-bold tracking-wide text-white transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 active:scale-95 group"
           >
-            Save Template
+            <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-500 ease-in-out"></div>
+            <span className="relative z-10 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+              Save Template
+            </span>
           </button>
         </div>
       </div>
 
       {message && (
-        <div className="mb-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-sm text-emerald-400 font-medium">
+        <div className="mb-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-400 font-medium flex items-center gap-3 backdrop-blur-md">
+          <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           {message}
         </div>
       )}
 
       {errors.length > 0 && (
-        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 p-4 space-y-2">
-          <h4 className="text-sm font-medium text-red-400">Schema Validation Errors found:</h4>
-          <ul className="list-disc pl-5 text-sm text-red-400/90">
+        <div className="mb-6 rounded-xl bg-ruby/10 border border-ruby/20 p-5 space-y-3 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-ruby" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <h4 className="text-sm font-bold tracking-wide text-ruby uppercase">Schema Validation Errors:</h4>
+          </div>
+          <ul className="list-disc pl-7 text-sm text-ruby/80 space-y-1 font-mono">
             {errors.map((err, idx) => (
-              <li key={idx}><strong className="text-red-400">{err.field}</strong>: {err.message}</li>
+              <li key={idx}><strong className="text-ruby">{err.field}</strong>: {err.message}</li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* Editor Frame */}
-      <div className="rounded-2xl border border-ink-300 bg-ink-200 overflow-hidden shadow-2xl h-[60vh]">
-        <MonacoEditor
-          language="yaml"
-          theme="vs-dark"
-          value={yamlCode}
-          onChange={(val) => setYamlCode(val || '')}
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            fontFamily: 'Consolas, "Courier New", monospace',
-            lineHeight: 24,
-            padding: { top: 16 },
-            scrollbar: { vertical: 'visible' }
-          }}
-        />
+      {/* Mac-style Editor Frame */}
+      <div className="rounded-2xl border border-white/10 bg-[#1e1e1e] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] h-[65vh] flex flex-col group transition-all hover:border-white/20">
+        <div className="bg-[#2d2d2d] px-4 py-3 flex items-center border-b border-black/40">
+          <div className="flex gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500/80 border border-black/20"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/80 border border-black/20"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500/80 border border-black/20"></div>
+          </div>
+          <div className="mx-auto text-xs font-mono text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity">
+            {crewId ? `${crewId}.yaml` : 'untitled.yaml'}
+          </div>
+        </div>
+        <div className="flex-1 relative">
+          <MonacoEditor
+            language="yaml"
+            theme="vs-dark"
+            value={yamlCode}
+            onChange={(val) => setYamlCode(val || '')}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              fontFamily: '"JetBrains Mono", Consolas, "Courier New", monospace',
+              lineHeight: 24,
+              padding: { top: 24, bottom: 24 },
+              scrollbar: { vertical: 'visible', verticalScrollbarSize: 10 },
+              cursorBlinking: 'smooth',
+              cursorSmoothCaretAnimation: 'on',
+              formatOnPaste: true,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
