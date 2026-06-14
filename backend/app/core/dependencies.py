@@ -10,7 +10,21 @@ security = HTTPBearer()
 async def get_current_user(request: Request, auth: HTTPAuthorizationCredentials = Depends(security)) -> str:
     """Auth dependency extracting JWT credentials and storing them in request context."""
     token = auth.credentials
-    uid = await verify_firebase_token(token)
+    
+    if token.startswith("nx-sk-"):
+        # Verify API Key
+        db_client = get_supabase_client()
+        try:
+            response = db_client.table("api_keys").select("user_id").eq("api_key", token).execute()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Database error verifying API Key: {str(e)}")
+            
+        if not response.data:
+            raise HTTPException(status_code=401, detail="Invalid API Key")
+        uid = response.data[0]["user_id"]
+    else:
+        # Verify Firebase JWT
+        uid = await verify_firebase_token(token)
 
     # Auto-upsert dummy user to satisfy Foreign Key constraints
     try:

@@ -119,17 +119,7 @@ app.mount("/cli", StaticFiles(directory="backend/public/cli"), name="cli")
 
 # Include API Routers (STUB references)
 from backend.app.api.routes import (  # noqa: E402
-    health,
-    swarms,
-    swarms_voice,
-    websocket,
-    approvals,
-    memory,
-    crews,
-    audit,
-    schedules,
-    briefings,
-    test_ws_route,
+    health, swarms, swarms_voice, websocket, approvals, memory, crews, audit, schedules, briefings, test_ws_route, auth
 )
 
 app.include_router(health.router)
@@ -143,3 +133,4 @@ app.include_router(audit.router)
 app.include_router(schedules.router)
 app.include_router(briefings.router)
 app.include_router(test_ws_route.router)
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
