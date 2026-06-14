@@ -11,8 +11,9 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing BACKEND_IP" });
   }
 
+  const cleanIp = backendIp.replace(/^https?:\/\//, '').replace(/\/$/, '');
   const targetPath = req.url.replace(/^\/api/, '');
-  const targetUrl = `http://${backendIp}${targetPath}`;
+  const targetUrl = `http://${cleanIp}${targetPath}`;
 
   try {
     const fetchResponse = await fetch(targetUrl, {
@@ -45,6 +46,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Proxy error:", error);
-    res.status(502).json({ error: "Proxy internal error: " + error.message });
+    res.status(502).json({ error: "Proxy internal error: " + error.message, url: targetUrl });
   }
 }
